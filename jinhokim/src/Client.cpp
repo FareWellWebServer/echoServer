@@ -1,7 +1,7 @@
 #include "../include/Client.hpp"
 
-Client::Client(int fd) {
-    _fd = fd;
+Client::Client(int port) {
+    _port = port;
 }
 
 Client::~Client(void) {
@@ -9,5 +9,5 @@ Client::~Client(void) {
 }
 
 int Client::getFd(void) const {
-    return this->_fd;
+    return this->_port;
 }

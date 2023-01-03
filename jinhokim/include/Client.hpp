@@ -13,9 +13,9 @@ class Client
         /**
          * @brief Construct a new Client object
          * 
-         * @param fd 
+         * @param port 
          */
-        Client(int fd);
+        Client(int port);
         /**
          * @brief Destroy the Client object
          * Default destrutor
@@ -24,7 +24,7 @@ class Client
 
         int getFd(void) const;
     private:
-        int _fd;
+        int _port;
 };
 
 #endif  // CLIENT_HPP_
