@@ -10,7 +10,7 @@
  */
 int checkArgument(int ac, char **av) {
     // argument 개수 확인
-    if (ac < 2) {
+    if (ac < 3) {
         std::cerr << "Argument error: few argument" << std::endl;
         return false;
     }
@@ -43,6 +43,8 @@ int checkArgument(int ac, char **av) {
  */
 void    main_process(int fd) {
     Client client(fd);
+
+    std::cout << "Client fd: " << client.getFd() << std::endl;
 
     return ;
 }
