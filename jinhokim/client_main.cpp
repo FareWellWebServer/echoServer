@@ -29,7 +29,7 @@ int checkArgument(int ac, char **av) {
     int fd = atoi(fdStr.c_str());
 
     if (fd < 3) {
-        std::cerr << "Argument error: Wrong port number" << std::endl;
+        std::cerr << "Argument error: Wrong fd number" << std::endl;
         return false;
     }
 
