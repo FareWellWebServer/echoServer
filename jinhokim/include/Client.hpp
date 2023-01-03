@@ -12,16 +12,16 @@ class Client
     public:
         /**
          * @brief Construct a new Client object
-         * Default construtor
+         * 
+         * @param fd 
          */
-        Client();
+        Client(int fd);
         /**
          * @brief Destroy the Client object
          * Default destrutor
          */
         virtual ~Client();
     private:
-
 };
 
 
