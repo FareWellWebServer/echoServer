@@ -20,10 +20,11 @@ class Client
          * @brief Destroy the Client object
          * Default destrutor
          */
-        virtual ~Client();
+        virtual ~Client(void);
+
+        int getFd(void) const;
     private:
+        int _fd;
 };
-
-
 
 #endif  // CLIENT_HPP_
