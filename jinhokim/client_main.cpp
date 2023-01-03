@@ -48,8 +48,7 @@ int main(int ac, char** av) {
 
         //main_process(atoi(port.c_str()));
     }
-    catch(const std::exception& e)
-    {
+    catch(const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }
 }
