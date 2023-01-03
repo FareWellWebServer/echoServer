@@ -6,11 +6,13 @@ INC_DIR = 	includes
 SRC_DIR = 	srcs
 
 INCS 	=	$(addprefix $(INC_DIR)/, \
-			client.hpp \
-			server.hpp \
+			Client.hpp \
+			Server.hpp \
 )
 
 SRCS 	=	$(addprefix $(SRC_DIR)/, \
+			Client.cpp \
+			Server.hpp \
 			main.cpp \
 )
 
