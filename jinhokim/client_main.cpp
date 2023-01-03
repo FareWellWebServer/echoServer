@@ -21,6 +21,13 @@ int main(int ac, char** av) {
             }
         }
 
+        int port = atoi(portStr.c_str());
+
+        if (port < 3) {
+            std::cerr << "Argument error: Wrong port number" << std::endl;
+            return EXIT_FAILURE;
+        }
+
         //main_process(atoi(port.c_str()));
     }
     catch(const std::exception& e)
