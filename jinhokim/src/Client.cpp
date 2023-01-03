@@ -8,6 +8,6 @@ Client::~Client(void) {
     ;
 }
 
-int Client::getFd(void) const {
+int Client::getPort(void) const {
     return this->_port;
 }

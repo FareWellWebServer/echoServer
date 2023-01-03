@@ -22,7 +22,7 @@ class Client
          */
         virtual ~Client(void);
 
-        int getFd(void) const;
+        int getPort(void) const;
     private:
         int _port;
 };
