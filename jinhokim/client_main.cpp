@@ -25,14 +25,6 @@ int checkArgument(int ac, char **av) {
         }
     }
 
-    // 올바른 fd인지 확인
-    int fd = atoi(fdStr.c_str());
-
-    if (fd < 3) {
-        std::cerr << "Argument error: Wrong fd number" << std::endl;
-        return false;
-    }
-
     return true;
 }
 
