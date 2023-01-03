@@ -12,9 +12,9 @@ int main(int ac, char** av) {
             return EXIT_FAILURE;
         }
 
-        std::string port(av[1]);
+        std::string portStr(av[1]);
 
-        for (char const& c: port) {
+        for (char const& c: portStr) {
             if (!std::isdigit(c)) {
                 std::cerr << "Argument error: port is not number" << std::endl;
                 return EXIT_FAILURE;
