@@ -1,15 +1,28 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
+# include <iostream>
+
+/**
+ * @brief 
+ * clinet class, use socket communication for echo server
+ */
 class Client
 {
-	private:
-		
 	public:
-		Client(void);
-		Client(const Client& src);
+	/**
+	 * @brief Construct a new Client object
+	 * 
+	 * @param fd 
+	 */
+		explicit Client(const int fd);
+	/**
+	 * @brief Destroy the Client object
+	 * 
+	 */
 		virtual ~Client(void);
-		Client& operator=(Client const& rhs);
+	private:
+
 };
 
 #endif
