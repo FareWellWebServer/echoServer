@@ -2,6 +2,7 @@
 
 Client::Client(int fd) {
     std::cout << "fd constructor called" << std::endl;
+    std::cout << fd << std::endl;
 }
 
 Client::~Client() {
