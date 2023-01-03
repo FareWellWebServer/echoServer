@@ -16,11 +16,11 @@ int checkArgument(int ac, char **av) {
     }
 
     // fd가 숫자인지 확인
-    std::string fdStr(av[1]);
+    std::string portStr(av[2]);
 
-    for (char const& c: fdStr) {
+    for (char const& c: portStr) {
         if (!std::isdigit(c)) {
-            std::cerr << "Argument error: fd is not number" << std::endl;
+            std::cerr << "Argument error: port is not number" << std::endl;
             return false;
         }
     }
@@ -31,12 +31,27 @@ int checkArgument(int ac, char **av) {
 /**
  * @brief 
  * 
- * @param fd 
+ * @param port 
  */
-void    main_process(int fd) {
-    Client client(fd);
+void    main_process(int port) {
+    Client client(port);
+    std::cout << "client fd: " << client.getPort() << std::endl;
 
-    std::cout << "Client fd: " << client.getFd() << std::endl;
+    // socket 생성, fd 얻음
+    int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sock_fd < 0) {
+        std::cerr << "Socket creat error: socket can't be created" << std::endl;
+        return ;
+    }
+    std::cout << "sock_fd: " << sock_fd << std::endl;
+
+    /*
+    sockaddr_in server_addr;
+    hostent     *server;
+
+    server = gethostbyname(av[1]);
+    */
 
     return ;
 }
@@ -46,7 +61,7 @@ int main(int ac, char** av) {
         if (!checkArgument(ac, av))
             return EXIT_FAILURE;
 
-        main_process(atoi(av[1]));
+        main_process(atoi(av[2]));
 
         return EXIT_SUCCESS;
     }
