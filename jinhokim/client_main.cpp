@@ -36,6 +36,7 @@ int checkArgument(int ac, char **av) {
     return true;
 }
 
+
 int main_process(int port) {
     std::cout << port << std::endl;
     return EXIT_SUCCESS;
@@ -46,7 +47,7 @@ int main(int ac, char** av) {
         if (!checkArgument(ac, av))
             return EXIT_FAILURE;
 
-        //main_process(atoi(av[1]));
+        main_process(atoi(av[1]));
     }
     catch(const std::exception& e) {
         std::cerr << e.what() << std::endl;
