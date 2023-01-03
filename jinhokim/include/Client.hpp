@@ -2,6 +2,9 @@
 # define CLIENT_HPP_
 
 # include <iostream>
+# include <sys/socket.h>
+# include <arpa/inet.h>
+# include <netdb.h>
 
 /**
  * @brief 
