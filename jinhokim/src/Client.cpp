@@ -1,7 +1,7 @@
 #include "include/Client.hpp"
 
-Client::Client() {
-    std::cout << "Default constructor called" << std::endl;
+Client::Client(int fd) {
+    std::cout << "fd constructor called" << std::endl;
 }
 
 Client::~Client() {
