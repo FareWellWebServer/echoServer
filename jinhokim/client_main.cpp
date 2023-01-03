@@ -1,9 +1,9 @@
 #include "include/Client.hpp"
 
-int main_process(int port) {
-    std::cout << port << std::endl;
-    return EXIT_SUCCESS;
-}
+// int main_process(int port) {
+//     std::cout << port << std::endl;
+//     return EXIT_SUCCESS;
+// }
 
 int main(int ac, char** av) {
     try {
@@ -21,7 +21,7 @@ int main(int ac, char** av) {
             }
         }
 
-        main_process(atoi(port.c_str()));
+        //main_process(atoi(port.c_str()));
     }
     catch(const std::exception& e)
     {
