@@ -36,11 +36,10 @@ int checkArgument(int ac, char **av) {
     return true;
 }
 
-
-int main_process(int port) {
-    std::cout << port << std::endl;
-    return EXIT_SUCCESS;
-}
+// int main_process(int port) {
+//     std::cout << port << std::endl;
+//     return EXIT_SUCCESS;
+// }
 
 int main(int ac, char** av) {
     try {
