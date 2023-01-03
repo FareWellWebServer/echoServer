@@ -15,20 +15,20 @@ int checkArgument(int ac, char **av) {
         return false;
     }
 
-    // port가 숫자인지 확인
-    std::string portStr(av[1]);
+    // fd가 숫자인지 확인
+    std::string fdStr(av[1]);
 
-    for (char const& c: portStr) {
+    for (char const& c: fdStr) {
         if (!std::isdigit(c)) {
-            std::cerr << "Argument error: port is not number" << std::endl;
+            std::cerr << "Argument error: fd is not number" << std::endl;
             return false;
         }
     }
 
-    // 올바른 port인지 확인
-    int port = atoi(portStr.c_str());
+    // 올바른 fd인지 확인
+    int fd = atoi(fdStr.c_str());
 
-    if (port < 3) {
+    if (fd < 3) {
         std::cerr << "Argument error: Wrong port number" << std::endl;
         return false;
     }
@@ -36,10 +36,16 @@ int checkArgument(int ac, char **av) {
     return true;
 }
 
-// int main_process(int port) {
-//     std::cout << port << std::endl;
-//     return EXIT_SUCCESS;
-// }
+/**
+ * @brief 
+ * 
+ * @param fd 
+ */
+void    main_process(int fd) {
+    Client client(fd);
+
+    return ;
+}
 
 int main(int ac, char** av) {
     try {
@@ -47,8 +53,11 @@ int main(int ac, char** av) {
             return EXIT_FAILURE;
 
         main_process(atoi(av[1]));
+
+        return EXIT_SUCCESS;
     }
     catch(const std::exception& e) {
         std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 }
