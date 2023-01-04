@@ -3,10 +3,10 @@
 
 # include <iostream>
 # include <cstring>
+# include <unistd.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
 # include <netdb.h>
-# include <unistd.h>
 
 # define    PORT 8080
 
@@ -23,9 +23,11 @@ class Client
         int createSocket(void);
         int setServer(void);
         int connectServer(void);
-
         int sendMessage(std::string message) const;
         int receiveMessage(void);
+
+        int set(void);
+        int run(void);
 
 		const std::string	getHostname(void) const;
 		int					getPort(void) const;
@@ -39,5 +41,8 @@ class Client
         sockaddr_in         _server_address;
         std::string         _response;
 };
+
+int printError(const std::string str);
+int checkArgument(int ac, char **av);
 
 #endif  // CLIENT_HPP_

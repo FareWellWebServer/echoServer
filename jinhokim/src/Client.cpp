@@ -2,7 +2,10 @@
 
 Client::Client(std::string hostname, int port) : 
     _hostname(hostname), 
-    _port(port) {};
+    _port(port) {
+    std::cout << "hostname: " << _hostname << std::endl;
+    std::cout << "port: " << _port << std::endl;
+    };
 
 Client::~Client(void) {
     close(_clientFd);
@@ -85,12 +88,61 @@ int Client::sendMessage(std::string message) const {
  * 서버로부터 받은 메시지의 바이트
  */
 int Client::receiveMessage(void) {
-    char buffer[2048];
+    char buffer[1024];
 
     // recv(): used to receive the response from the server
     ssize_t bytes_received = recv(_clientFd, buffer, sizeof(buffer), 0);
     _response = std::string(buffer, bytes_received);
     return bytes_received;
+}
+
+/**
+ * @brief 
+ * client setting
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
+int    Client::set(void) {
+    if (createSocket())
+        return (printError("Failed to create socket"));
+
+    if (setServer())
+        return (printError("Failed to resolve hostname"));
+
+    if (connectServer())
+        return (printError("Failed to connect to server"));
+
+	std::cout << "Connected to server" << std::endl;
+
+    return 0;
+}
+
+/**
+ * @brief 
+ * 서버와 통신 시작
+ * @return int 
+ * 정상 종료시 0, 실패 시 1 반환
+ */
+int    Client::run(void) {
+    while (42) {
+        std::string message;
+        std::getline(std::cin, message);
+        if (std::cin.eof() || !message.compare("exit")) {
+            std::cout << "Client Bye!" << std::endl;
+            break ;
+        }
+
+        if (sendMessage(message))
+			return (printError("Failed to send data to server"));
+
+        ssize_t bytes_received = receiveMessage();
+        if (bytes_received < 0)
+			return (printError("Failed to receive data from server"));
+        else if (bytes_received == 0)
+			return (printError("Server disconnected"));
+        std::cout << "Received from server: " << getResponse() << std::endl;
+    }
+    return 0;
 }
 
 const std::string Client::getHostname(void) const {
@@ -107,4 +159,37 @@ int Client::getClientFd(void) const {
 
 const std::string Client::getResponse(void) const {
 	return this->_response;
+}
+
+int printError(const std::string str) {
+    std::cerr << str << std::endl;
+    return 1;
+}	
+
+/**
+ * @brief 
+ * argument 에러 처리
+ * @param ac 
+ * @param av 
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
+int checkArgument(int ac, char **av) {
+    // argument 개수 확인
+    if (ac < 3)
+        return (printError("Few argument error"));
+
+    // hostname이 있는지 확인
+    std::string hostStr(av[1]);
+    if (hostStr.length() == 0)
+        return (printError("Invalid hostname"));
+
+    // fd가 숫자인지 확인
+    std::string portStr(av[2]);
+    for (std::size_t i = 0; i < portStr.size(); i++) {
+        if (!std::isdigit(portStr[i]))
+            return (printError("Port is not number"));
+    }
+
+    return 0;
 }
