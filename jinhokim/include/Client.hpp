@@ -20,11 +20,19 @@ class Client
         Client(std::string hostname, int port);
         virtual ~Client(void);
 
+        int createSocket(void);
+        int setServer(void);
+
 		const std::string	getHostname(void) const;
 		int					getPort(void) const;
+		int					getClientFd(void) const;
+        int                 getServerIp(void) const;
     private:
-        std::string _hostname;
-        int         _port;
+        const std::string   _hostname;
+        const int           _port;
+        int                 _clientFd;
+        hostent*            _server;
+        sockaddr_in         _server_address;
 };
 
 #endif  // CLIENT_HPP_
