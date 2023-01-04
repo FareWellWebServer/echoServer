@@ -6,6 +6,8 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 
+# define    PORT 8080
+
 /**
  * @brief 
  * Client class, use socket communication for echo server
@@ -16,18 +18,18 @@ class Client
         /**
          * @brief Construct a new Client object
          * 
+         * @param hostname 
          * @param port 
          */
-        Client(int port);
+        Client(std::string hostname, int port);
         /**
          * @brief Destroy the Client object
          * Default destrutor
          */
         virtual ~Client(void);
-
-        int getPort(void) const;
     private:
-        int _port;
+        std::string _hostname;
+        int         _port;
 };
 
 #endif  // CLIENT_HPP_
