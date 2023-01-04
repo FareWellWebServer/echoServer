@@ -15,18 +15,11 @@
 class Client
 {
     public:
-        /**
-         * @brief Construct a new Client object
-         * 
-         * @param hostname 
-         * @param port 
-         */
         Client(std::string hostname, int port);
-        /**
-         * @brief Destroy the Client object
-         * Default destrutor
-         */
         virtual ~Client(void);
+
+		const std::string	getHostname(void) const;
+		int					getPort(void) const;
     private:
         std::string _hostname;
         int         _port;
