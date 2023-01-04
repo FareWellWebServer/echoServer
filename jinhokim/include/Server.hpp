@@ -19,8 +19,9 @@ class Server {
         int createSocket(void);
         int bindSocket(void);
 
-        int set(void);
-        int run(void);
+        int     set(void);
+        void    setResponse(void);
+        int     run(void);
     private:
         int                 _server_fd;
         sockaddr_in         _address;

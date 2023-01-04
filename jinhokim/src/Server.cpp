@@ -66,6 +66,19 @@ int Server::set(void) {
     return 0;
 }
 
+void    Server::setResponse(void) {
+    if (!_request.compare("GET"))
+        _response = "request=GET";
+    else if (!_request.compare("POST"))
+        _response = "request=POST";
+    else if (!_request.compare("DELETE"))
+        _response = "request=DELETE";
+    else
+        _response = "request=??";
+
+    return ;
+}
+
 /**
  * @brief 
  * 클라이언트와 통신 시작
@@ -100,14 +113,7 @@ int Server::run(void) {
             _request = std::string(buffer, bytes_received);
             std::cout << "request: " << _request << std::endl;
 
-            if (!_request.compare("GET"))
-                _response = "request=GET";
-            else if (!_request.compare("POST"))
-                _response = "request=POST";
-            else if (!_request.compare("DELETE"))
-                _response = "request=DELETE";
-            else
-                _response = "request=??";
+            setResponse();
 
             ssize_t bytes_sent = send(_client_fd, _response.c_str(), _response.size(), 0);
             if (bytes_sent < 0)
