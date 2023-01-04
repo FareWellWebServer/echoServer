@@ -22,11 +22,11 @@ class Client
 
         int createSocket(void);
         int setServer(void);
+        int connectServer(void);
 
 		const std::string	getHostname(void) const;
 		int					getPort(void) const;
 		int					getClientFd(void) const;
-        int                 getServerIp(void) const;
     private:
         const std::string   _hostname;
         const int           _port;

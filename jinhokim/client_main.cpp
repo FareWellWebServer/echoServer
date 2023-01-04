@@ -38,18 +38,10 @@ int	main_process(std::string hostname, int port) {
 
     if (client.setServer())
         return (printError("Failed to resolve hostname"));
-    std::cout << "server ip: " << client.getServerIp() << std::endl;
 
-	/**
-	 * 클라이언트와 서버 연결
-	 * connect func: used by a client to establish a connection to a server
-	 */
-    // int connect_result = connect(client_fd, (sockaddr*)&server_address, \
-    //                                 sizeof(server_address));
-    // if (connect_result < 0)
-    //     return (printError("Failed to connect to server"));
-
-	// std::cout << "Connected to server" << std::endl;
+    if (client.connectServer())
+        return (printError("Failed to connect to server"));
+	std::cout << "Connected to server" << std::endl;
 
     // message 읽어서 서버와 통신해보기
     // while (42) {

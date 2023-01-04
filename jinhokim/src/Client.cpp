@@ -48,6 +48,21 @@ int Client::setServer(void) {
     return 0;
 }
 
+/**
+ * @brief 
+ * 클라이언트와 서버 연결
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
+int Client::connectServer(void) {
+    // connect(): used by a client to establish a connection to a server
+    int connect_result = connect(_clientFd, (sockaddr*)&_server_address, \
+                                    sizeof(_server_address));
+    if (connect_result < 0)
+        return 1;
+    return 0;
+}
+
 const std::string Client::getHostname(void) const {
 	return this->_hostname;
 }
@@ -59,7 +74,3 @@ int Client::getPort(void) const {
 int Client::getClientFd(void) const {
 	return this->_clientFd;
 }
-
-int Client::getServerIp(void) const {
-    return this->_server->h_addrtype;
-} 
