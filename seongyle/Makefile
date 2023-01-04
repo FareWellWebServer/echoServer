@@ -27,11 +27,14 @@ client: chat_gpt_client.cpp
 # Clean up
 clean:
 	@echo "$(YELLOW)Cleaning up...$(RESET)"
-	@rm -f server client
 	@echo "$(GREEN)Done.$(RESET)"
 
-re:
+fclean:
 	make clean
+	@rm -f server client
+
+re:
+	make fclean
 	make all
 
 # Phony targets
