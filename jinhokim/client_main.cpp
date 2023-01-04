@@ -6,7 +6,7 @@ bool    printError(const std::string str) {
 }
 
  // 성공 시 true, 실패 시 false 반환
-int checkArgument(int ac, char **av) {
+bool	checkArgument(int ac, char **av) {
     // argument 개수 확인
     if (ac < 3)
         return (printError("Few argument error"));
