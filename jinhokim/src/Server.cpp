@@ -48,6 +48,30 @@ int Server::bindSocket(void) {
 
 /**
  * @brief 
+ * request에 맞게 response 매칭
+ */
+void    Server::setResponse(void) {
+    if (!_request.compare("GET"))
+        _response = "request=GET";
+    else if (!_request.compare("POST"))
+        _response = "request=POST";
+    else if (!_request.compare("DELETE"))
+        _response = "request=DELETE";
+    else
+        _response = "request=??";
+
+    return ;
+}
+
+int Server::sendResponse(void) {
+    ssize_t bytes_sent = send(_client_fd, _response.c_str(), _response.size(), 0);
+    if (bytes_sent < 0)
+        return 1;
+    return 0;
+}
+
+/**
+ * @brief 
  * server setting
  * @return int 
  * 성공 시 0, 실패 시 1 반환
@@ -64,19 +88,6 @@ int Server::set(void) {
         return (printError("Failed to listen on socket"));
 
     return 0;
-}
-
-void    Server::setResponse(void) {
-    if (!_request.compare("GET"))
-        _response = "request=GET";
-    else if (!_request.compare("POST"))
-        _response = "request=POST";
-    else if (!_request.compare("DELETE"))
-        _response = "request=DELETE";
-    else
-        _response = "request=??";
-
-    return ;
 }
 
 /**
@@ -115,8 +126,7 @@ int Server::run(void) {
 
             setResponse();
 
-            ssize_t bytes_sent = send(_client_fd, _response.c_str(), _response.size(), 0);
-            if (bytes_sent < 0)
+            if (sendResponse())
                 return (printError("Failed to send data to client"));
         }
     }
