@@ -53,8 +53,10 @@ int	main_process(std::string hostname, int port) {
     while (42) {
         std::string message;
         std::getline(std::cin, message);
-        if (std::cin.eof())
+        if (std::cin.eof() || !message.compare("exit")) {
+            std::cout << "Client Bye!" << std::endl;
             break ;
+        }
 
         if (client.sendMessage(message))
 			return (printError("Failed to send data to server"));
