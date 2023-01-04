@@ -5,7 +5,14 @@ int printError(const std::string str) {
     return 1;
 }
 
- // 성공 시 0, 실패 시 1 반환
+/**
+ * @brief 
+ * argument 에러 처리
+ * @param ac 
+ * @param av 
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
 int checkArgument(int ac, char **av) {
     // argument 개수 확인
     if (ac < 3)
@@ -33,7 +40,6 @@ int	main_process(std::string hostname, int port) {
     std::cout << "port: " << client.getPort() << std::endl;
 
     if (client.createSocket())
-        return (printError("Failed to create socket"));
     std::cout << "client fd: " << client.getClientFd() << std::endl;
 
     if (client.setServer())
@@ -43,30 +49,25 @@ int	main_process(std::string hostname, int port) {
         return (printError("Failed to connect to server"));
 	std::cout << "Connected to server" << std::endl;
 
-    // message 읽어서 서버와 통신해보기
-    // while (42) {
-    //     std::string message;
-    //     std::getline(std::cin, message);
-    //     if (std::cin.eof())
-    //         break ;
+    // 서버와 통신
+    while (42) {
+        std::string message;
+        std::getline(std::cin, message);
+        if (std::cin.eof())
+            break ;
 
-    //     // send func: used to send the message to the server
-    //     ssize_t bytes_sent = send(client_fd, message.c_str(), message.size(), 0);
-    //     if (bytes_sent < 0)
-	// 		return (printError("Failed to send data to server"));
+        if (client.sendMessage(message))
+			return (printError("Failed to send data to server"));
 
-    //     char buffer[2048];
-    //     // recv func: used to receive the response from the server
-    //     ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-    //     if (bytes_received < 0)
-	// 		return (printError("Failed to eceive data from server"));
-    //     else if (bytes_received == 0)
-	// 		return (printError("Server disconnected"));
+        ssize_t bytes_received = client.receiveMessage();
+        if (bytes_received < 0)
+			return (printError("Failed to receive data from server"));
+        else if (bytes_received == 0)
+			return (printError("Server disconnected"));
+        std::cout << "Received from server: " << client.getResponse() << std::endl;
+    }
 
-    //     std::cout << "Received from server: " << std::string(buffer, bytes_received) << std::endl;
-    // }
-
-    return true;
+    return 0;
 }
 
 int main(int ac, char** av) {

@@ -63,6 +63,36 @@ int Client::connectServer(void) {
     return 0;
 }
 
+/**
+ * @brief 
+ * 서버에 메시지 전송
+ * @param message 
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
+int Client::sendMessage(std::string message) const {
+    // send func: used to send the message to the server
+    ssize_t bytes_sent = send(_clientFd, message.c_str(), message.size(), 0);
+    if (bytes_sent < 0)
+        return 1;
+    return 0;
+}
+
+/**
+ * @brief 
+ * 서버로부터 메시지 받기
+ * @return int 
+ * 서버로부터 받은 메시지의 바이트
+ */
+int Client::receiveMessage(void) {
+    char buffer[2048];
+
+    // recv(): used to receive the response from the server
+    ssize_t bytes_received = recv(_clientFd, buffer, sizeof(buffer), 0);
+    _response = std::string(buffer, bytes_received);
+    return bytes_received;
+}
+
 const std::string Client::getHostname(void) const {
 	return this->_hostname;
 }
@@ -73,4 +103,8 @@ int Client::getPort(void) const {
 
 int Client::getClientFd(void) const {
 	return this->_clientFd;
+}
+
+const std::string Client::getResponse(void) const {
+	return this->_response;
 }
