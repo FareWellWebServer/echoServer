@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-const int PORT = 12345;
+const int PORT = 42;
 const int BUFFER_SIZE = 1024;
 
 int main()
