@@ -74,39 +74,30 @@ int	main_process(std::string hostname, int port) {
 
 	std::cout << "Connected to server" << std::endl;
 
-//     while (true)
-//     {
-//         std::string message;
-//         std::getline(std::cin, message);
-//         if (std::cin.eof())
-//         {
-//             break;
-//         }
+	/**
+	 * message 읽어서 서버와 통신해보기
+	 */
+    while (42) {
+        std::string message;
+        std::getline(std::cin, message);
+        if (std::cin.eof())
+            break ;
 
-//         ssize_t bytes_sent = send(client_fd, message.c_str(), message.size(), 0);
-//         if (bytes_sent < 0)
-//         {
-//             std::cerr << "Failed to send data to server" << std::endl;
-//             break;
-//         }
+        ssize_t bytes_sent = send(client_fd, message.c_str(), message.size(), 0);
+        if (bytes_sent < 0)
+			return (printError("Failed to send data to server"));
 
-//         char buffer[1024];
-//         ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-//         if (bytes_received < 0)
-//         {
-//             std::cerr << "Failed to receive data from server" << std::endl;
-//             break;
-//         }
-//         else if (bytes_received == 0)
-//         {
-//             std::cout << "Server disconnected" << std::endl;
-//             break;
-//         }
+        char buffer[2048];
+        ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (bytes_received < 0)
+			return (printError("Failed to eceive data from server"));
+        else if (bytes_received == 0)
+			return (printError("Server disconnected"));
 
-//         std::cout << "Received from server: " << std::string(buffer, bytes_received) << std::endl;
-//     }
+        std::cout << "Received from server: " << std::string(buffer, bytes_received) << std::endl;
+    }
 
-//     close(client_fd);
+    close(client_fd);
 
     return true;
 }
