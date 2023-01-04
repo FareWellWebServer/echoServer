@@ -7,7 +7,7 @@ int	main_process(int port) {
 int main(int ac, char** av) {
 	try {
 		if (ac < 3) {
-		std::cerr << "please, input one argument(port)." << std::endl;
+		throw std::runtime_error("please, input one argument(port).");
 		return EXIT_FAILURE;
 		}
 		main_process(atoi(av[1]));
