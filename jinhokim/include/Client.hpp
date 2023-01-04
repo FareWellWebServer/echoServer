@@ -23,20 +23,15 @@ class Client
         int createSocket(void);
         int setServer(void);
         int connectServer(void);
-        int sendMessage(std::string message) const;
-        int receiveMessage(void);
+        int sendRequest(std::string message) const;
+        int receiveResponse(void);
 
         int set(void);
         int run(void);
-
-		const std::string	getHostname(void) const;
-		int					getPort(void) const;
-		int					getClientFd(void) const;
-		const std::string   getResponse(void) const;
     private:
         const std::string   _hostname;
         const int           _port;
-        int                 _clientFd;
+        int                 _client_fd;
         hostent*            _server;
         sockaddr_in         _server_address;
         std::string         _response;

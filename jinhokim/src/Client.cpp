@@ -8,7 +8,7 @@ Client::Client(std::string hostname, int port) :
     };
 
 Client::~Client(void) {
-    close(_clientFd);
+    close(_client_fd);
 }
 
 /**
@@ -20,8 +20,8 @@ Client::~Client(void) {
 int Client::createSocket(void) {
     // AF_INET: specifies that the socket will use the IPv4 protocol, 
     // SOCK_STREAM: specifies that the socket will use a stream-based protocol (in this case, TCP)
-    _clientFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_clientFd < 0)
+    _client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (_client_fd < 0)
         return 1;
     return 0;
 }
@@ -59,7 +59,7 @@ int Client::setServer(void) {
  */
 int Client::connectServer(void) {
     // connect(): used by a client to establish a connection to a server
-    int connect_result = connect(_clientFd, (sockaddr*)&_server_address, \
+    int connect_result = connect(_client_fd, (sockaddr*)&_server_address, \
                                     sizeof(_server_address));
     if (connect_result < 0)
         return 1;
@@ -73,9 +73,9 @@ int Client::connectServer(void) {
  * @return int 
  * 성공 시 0, 실패 시 1 반환
  */
-int Client::sendMessage(std::string message) const {
+int Client::sendRequest(std::string message) const {
     // send func: used to send the message to the server
-    ssize_t bytes_sent = send(_clientFd, message.c_str(), message.size(), 0);
+    ssize_t bytes_sent = send(_client_fd, message.c_str(), message.size(), 0);
     if (bytes_sent < 0)
         return 1;
     return 0;
@@ -87,11 +87,11 @@ int Client::sendMessage(std::string message) const {
  * @return int 
  * 서버로부터 받은 메시지의 바이트
  */
-int Client::receiveMessage(void) {
+int Client::receiveResponse(void) {
     char buffer[1024];
 
     // recv(): used to receive the response from the server
-    ssize_t bytes_received = recv(_clientFd, buffer, sizeof(buffer), 0);
+    ssize_t bytes_received = recv(_client_fd, buffer, sizeof(buffer), 0);
     _response = std::string(buffer, bytes_received);
     return bytes_received;
 }
@@ -132,33 +132,17 @@ int    Client::run(void) {
             break ;
         }
 
-        if (sendMessage(message))
+        if (sendRequest(message))
 			return (printError("Failed to send data to server"));
 
-        ssize_t bytes_received = receiveMessage();
+        ssize_t bytes_received = receiveResponse();
         if (bytes_received < 0)
 			return (printError("Failed to receive data from server"));
         else if (bytes_received == 0)
 			return (printError("Server disconnected"));
-        std::cout << "Received from server: " << getResponse() << std::endl;
+        std::cout << "Received from server: " << _response << std::endl;
     }
     return 0;
-}
-
-const std::string Client::getHostname(void) const {
-	return this->_hostname;
-}
-
-int Client::getPort(void) const {
-	return this->_port;
-}
-
-int Client::getClientFd(void) const {
-	return this->_clientFd;
-}
-
-const std::string Client::getResponse(void) const {
-	return this->_response;
 }
 
 int printError(const std::string str) {
