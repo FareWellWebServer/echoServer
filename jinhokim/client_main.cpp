@@ -64,8 +64,7 @@ int	main_process(std::string hostname, int port) {
 
 	/**
 	 * 클라이언트와 서버 연결
-	 * TODO -> 서버 구현
-	 * connect func: used by a client to establish a connection to a server.
+	 * connect func: used by a client to establish a connection to a server
 	 */
     int connect_result = connect(client_fd, (sockaddr*)&server_address, \
                                     sizeof(server_address));
@@ -74,20 +73,20 @@ int	main_process(std::string hostname, int port) {
 
 	std::cout << "Connected to server" << std::endl;
 
-	/**
-	 * message 읽어서 서버와 통신해보기
-	 */
+    // message 읽어서 서버와 통신해보기
     while (42) {
         std::string message;
         std::getline(std::cin, message);
         if (std::cin.eof())
             break ;
 
+        // send func: used to send the message to the server
         ssize_t bytes_sent = send(client_fd, message.c_str(), message.size(), 0);
         if (bytes_sent < 0)
 			return (printError("Failed to send data to server"));
 
         char buffer[2048];
+        // recv func: used to receive the response from the server
         ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
         if (bytes_received < 0)
 			return (printError("Failed to eceive data from server"));
