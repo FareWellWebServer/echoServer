@@ -1,13 +1,10 @@
 #include "../include/Client.hpp"
 
-Client::Client(int port) {
+Client::Client(std::string hostname, int port) {
+    _hostname = hostname;
     _port = port;
 }
 
 Client::~Client(void) {
     ;
-}
-
-int Client::getPort(void) const {
-    return this->_port;
 }
