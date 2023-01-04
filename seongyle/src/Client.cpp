@@ -7,5 +7,4 @@ Client::Client(const int fd)
 
 Client::~Client(void)
 {
-	// TODO: close fd;
 }
