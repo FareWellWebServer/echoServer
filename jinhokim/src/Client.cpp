@@ -83,21 +83,6 @@ int Client::sendRequest(std::string message) const {
 
 /**
  * @brief 
- * 서버로부터 메시지 받기
- * @return int 
- * 서버로부터 받은 메시지의 바이트
- */
-int Client::receiveResponse(void) {
-    char buffer[1024];
-
-    // recv(): used to receive the response from the server
-    ssize_t bytes_received = recv(_client_fd, buffer, sizeof(buffer), 0);
-    _response = std::string(buffer, bytes_received);
-    return bytes_received;
-}
-
-/**
- * @brief 
  * client setting
  * @return int 
  * 성공 시 0, 실패 시 1 반환
@@ -135,11 +120,16 @@ int    Client::run(void) {
         if (sendRequest(message))
 			return (printError("Failed to send data to server"));
 
-        ssize_t bytes_received = receiveResponse();
+        char buffer[1024];
+
+        // recv(): used to receive the response from the server
+        ssize_t bytes_received = recv(_client_fd, buffer, sizeof(buffer), 0);
         if (bytes_received < 0)
 			return (printError("Failed to receive data from server"));
         else if (bytes_received == 0)
 			return (printError("Server disconnected"));
+
+        _response = std::string(buffer, bytes_received);
         std::cout << "Received from server: " << _response << std::endl;
     }
     return 0;

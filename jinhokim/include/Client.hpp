@@ -24,7 +24,6 @@ class Client
         int setServer(void);
         int connectServer(void);
         int sendRequest(std::string message) const;
-        int receiveResponse(void);
 
         int set(void);
         int run(void);
