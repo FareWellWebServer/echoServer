@@ -18,7 +18,6 @@ class Server {
 
         int createSocket(void);
         int bindSocket(void);
-        int sendResponse(void);
 
         int     set(void);
         void    setResponse(void);

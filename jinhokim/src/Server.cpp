@@ -63,13 +63,6 @@ void    Server::setResponse(void) {
     return ;
 }
 
-int Server::sendResponse(void) {
-    ssize_t bytes_sent = send(_client_fd, _response.c_str(), _response.size(), 0);
-    if (bytes_sent < 0)
-        return 1;
-    return 0;
-}
-
 /**
  * @brief 
  * server setting
@@ -111,8 +104,6 @@ int Server::run(void) {
                     << ntohs(_client_address.sin_port)
                     << std::endl;
 
-        std::cout << "request wait" << std::endl;
-
         while (42) {
             char buffer[1024];
             ssize_t bytes_received = recv(_client_fd, buffer, sizeof(buffer), 0);
@@ -125,8 +116,10 @@ int Server::run(void) {
             std::cout << "request: " << _request << std::endl;
 
             setResponse();
+            std::cout << "response: " << _response << std::endl;
 
-            if (sendResponse())
+            ssize_t bytes_sent = send(_client_fd, _response.c_str(), _response.size(), 0);
+            if (bytes_sent < 0)
                 return (printError("Failed to send data to client"));
         }
     }
