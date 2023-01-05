@@ -13,18 +13,14 @@
 #include <fcntl.h> /* fcntl */
 #include <iostream>
 
-#define MAXLINE 100000
-#define MAXBUF 100000
-
-
-struct rio_t
+namespace openFd
 {
-	int 	fd;
-	int		cnt;
-	char*	bufptr;
-	char	buf[MAXBUF];
-};
 
+int openClientFd(char *hostname, char *port);
+int openListenFd(char *port);
+
+
+};
 
 
 #endif
