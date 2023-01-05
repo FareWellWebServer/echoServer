@@ -5,8 +5,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+// #include <stdlib.h>
+#include <cstdlib>
+// #include <stdio.h>
+#include <cstdio>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -15,7 +17,8 @@ int main(int argc, char **argv)
     int client_sockfd;
     struct sockaddr_in clientaddr;
     int data = 123456789;
-    int client_len;
+//    int client_len;
+    socklen_t client_len; /* socklen_t == unsigned int */
 
     client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     clientaddr.sin_family = AF_INET;
@@ -24,7 +27,8 @@ int main(int argc, char **argv)
 
     client_len = sizeof(clientaddr);
 
-    if (connect(client_sockfd, (struct sockaddr *)&clientaddr, client_len) < 0)
+    //if (connect(client_sockfd, (struct sockaddr *)&clientaddr, client_len) < 0)
+    if (connect(client_sockfd, reinterpret_cast<struct sockaddr *>(&clientaddr), client_len) < 0)
     {
         perror("Connect error : ");
         exit(0);
