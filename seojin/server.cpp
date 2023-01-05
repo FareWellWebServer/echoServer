@@ -12,7 +12,7 @@ int main(int ac, char* av[])
 	int listenfd, connfd;
 	socklen_t clientlen;
 	struct sockaddr_storage clientaddr;
-	char clientHostname[10000], clientPort[10000];
+	char clientHostname[MAXLINE], clientPort[MAXLINE];
 
 
 	if (ac != 2)
@@ -25,12 +25,12 @@ int main(int ac, char* av[])
 
 	while (1)
 	{
-		// clientlen = sizeof(struct sockaddr_storage);
+		clientlen = sizeof(struct sockaddr_storage);
 		connfd = accept(listenfd, reinterpret_cast<struct sockaddr *>(&clientaddr), &clientlen);
 		getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), clientlen,\
-					clientHostname, 10000,\
-					clientPort, 10000,\
-					NI_NUMERICHOST);
+					clientHostname, MAXLINE,\
+					clientPort, MAXLINE,\
+					0);
 		std::cout << "Connected to (" << clientHostname << ", " << clientPort << ")\n";
 		echo(connfd);
 		close(connfd);
@@ -41,12 +41,37 @@ int main(int ac, char* av[])
 
 void echo(int connfd)
 {
-	size_t n;
-	char buf[10000];
+	ssize_t n, receiveCnt;
+	char c, buf[MAXBUF];
 
-	n = recv(connfd, buf, 10000, 0);
-	std::cout << "Server received " << n << "bytes\n";
-	send(connfd, buf, n, 0);
+	while (1)
+	{
+		for(n = 0; n < MAXLINE; ++n)
+		{
+			receiveCnt = recv(connfd, &c, 1, 0);
+			if (receiveCnt == 1)
+			{
+				buf[n] = c;
+				if (c == '\n')
+				{
+					++n;
+					break;
+				}
+			}
+			else if (receiveCnt == 0)
+			{
+				if (n == 0)
+					return;
+				else
+					break;
+			}
+			else
+				return;
+		}
+		std::cout << "Server received " << n << " bytes\n";
+		buf[n] = '\0';
+		send(connfd, buf, n, 0);
+	}
 	return ;
 }
 

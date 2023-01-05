@@ -13,14 +13,16 @@
 #include <fcntl.h> /* fcntl */
 #include <iostream>
 
+#define MAXLINE 1000000
+#define MAXBUF 1000000
+
+
 namespace openFd
 {
+	int openListenFd(char *port);
+	int openClientFd(char *hostname, char *port);
+}
 
-int openClientFd(char *hostname, char *port);
-int openListenFd(char *port);
-
-
-};
 
 
 #endif
