@@ -99,6 +99,8 @@ int Client::connectServer(void) {
 int Client::sendRequest(std::string message) const {
     // send func: used to send the message to the server
     ssize_t bytes_sent = send(_client_fd, message.c_str(), message.size(), 0);
+    std::cout << message.size() << std::endl;
+    std::cout << bytes_sent << std::endl;
     if (bytes_sent < 0)
         return 1;
     return 0;
@@ -142,6 +144,8 @@ int    Client::run(void) {
 
         if (sendRequest(message))
 			return (printError("Failed to send data to server"));
+
+        std::cout << "test" << std::endl;
 
         char buffer[1024];
 
