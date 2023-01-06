@@ -12,7 +12,7 @@ int main(int ac, char* av[])
 	int listenfd, connfd;
 	socklen_t clientlen;
 	struct sockaddr_storage clientaddr;
-	char clientHostname[MAXLINE], clientPort[MAXLINE];
+	char clientHostname[MAXLINE] = {0}, clientPort[MAXLINE] = {0};
 
 
 	if (ac != 2)
