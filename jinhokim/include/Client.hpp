@@ -1,5 +1,5 @@
-#ifndef CLIENT_HPP_
-# define CLIENT_HPP_
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
 # include <iostream>
 # include <cstring>
@@ -7,8 +7,6 @@
 # include <sys/socket.h>
 # include <arpa/inet.h>
 # include <netdb.h>
-
-# define    PORT 8080
 
 /**
  * @brief 
@@ -39,4 +37,4 @@ class Client
 int printError(const std::string str);
 int checkArgument(int ac, char **av);
 
-#endif  // CLIENT_HPP_
+#endif  // CLIENT_HPP

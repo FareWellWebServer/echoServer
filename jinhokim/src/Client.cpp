@@ -5,7 +5,7 @@ Client::Client(std::string hostname, int port) :
     _port(port) {
     std::cout << "hostname: " << _hostname << std::endl;
     std::cout << "port: " << _port << std::endl;
-    };
+}
 
 Client::~Client(void) {
     close(_client_fd);
@@ -45,7 +45,7 @@ int Client::setServer(void) {
 	 * h_length: specifies the length of the h_addr
 	 */
     _server_address.sin_family = AF_INET;
-    _server_address.sin_port = htons(PORT);
+    _server_address.sin_port = htons(_port);
     std::memcpy(&_server_address.sin_addr.s_addr, _server->h_addr, \
 					_server->h_length);
     return 0;
@@ -158,7 +158,7 @@ int checkArgument(int ac, char **av) {
     if (hostStr.length() == 0)
         return (printError("Invalid hostname"));
 
-    // fd가 숫자인지 확인
+    // port가 숫자인지 확인
     std::string portStr(av[2]);
     for (std::size_t i = 0; i < portStr.size(); i++) {
         if (!std::isdigit(portStr[i]))

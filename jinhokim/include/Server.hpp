@@ -1,5 +1,5 @@
-#ifndef SERVER_HPP_
-# define SERVER_HPP_
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
 # include <iostream>
 # include <cstring>
@@ -8,12 +8,11 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 
-# define    PORT 8080
 # define    BACKLOG 5
 
 class Server {
     public:
-        Server(void);
+        Server(int port);
         virtual ~Server(void);
 
         int createSocket(void);
@@ -23,6 +22,7 @@ class Server {
         void    setResponse(void);
         int     run(void);
     private:
+        int                 _port;    
         int                 _server_fd;
         sockaddr_in         _address;
         sockaddr_in         _client_address;
@@ -32,5 +32,6 @@ class Server {
 };
 
 int printError(const std::string str);
+int checkArgument(int ac, char **av);
 
-#endif  // SERVER_HPP_
+#endif  // SERVER_HPP

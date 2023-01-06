@@ -1,8 +1,6 @@
 #include "../include/Server.hpp"
 
-Server::Server(void) {
-    ;
-}
+Server::Server(int port) : _port(port) {}
 
 Server::~Server(void) {
     close(_client_fd);
@@ -37,7 +35,7 @@ int Server::bindSocket(void) {
      * INADDR_ANY: specify a socket should listen on all available network interfaces
 	 */
     _address.sin_family = AF_INET;
-    _address.sin_port = htons(PORT);
+    _address.sin_port = htons(_port);
     _address.sin_addr.s_addr = INADDR_ANY;
 
     int bind_result = bind(_server_fd, (sockaddr*)&_address, sizeof(_address));
@@ -130,3 +128,26 @@ int printError(const std::string str) {
     std::cerr << str << std::endl;
     return 1;
 }	
+
+/**
+ * @brief 
+ * argument 에러 처리
+ * @param ac 
+ * @param av 
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
+int checkArgument(int ac, char **av) {
+    // argument 개수 확인
+    if (ac < 2)
+        return (printError("Few argument error"));
+
+    // port가 숫자인지 확인
+    std::string portStr(av[1]);
+    for (std::size_t i = 0; i < portStr.size(); i++) {
+        if (!std::isdigit(portStr[i]))
+            return (printError("Port is not number"));
+    }
+
+    return 0;
+}
