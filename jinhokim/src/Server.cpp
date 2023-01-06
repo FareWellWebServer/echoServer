@@ -1,3 +1,27 @@
+/*
+socket() -> 연결되지 않은 새로운 소켓 생성
+bind() -> socket에 로컬 포트 번호 할당 
+listen() -> 커넥션을 받기 위해 로컬 소켓에 허용함을 표시
+accept() -> 누군가 로컬 포트에 커낵션을 맺기를 기다림
+recv() -> request 받음
+send() -> response 보냄
+close() -> 소켓 닫음
+
+EX)
+1. 새로운 socket 생성(socket)
+2. 80 포트로 socket을 묶는다.
+3. socket 커낵션을 허가함(listen)
+4. 커낵션을 기다림(accept)
+
+- 한 클라이언트와 커낵션됨 -
+5. 요청(http request)을 기다림(recv)
+
+- request 받음 -
+6. request 처리
+7. response 보냄(send)
+8. 커낵션을 닫는다(close)
+*/
+
 #include "../include/Server.hpp"
 
 Server::Server(int port) : _port(port) {}

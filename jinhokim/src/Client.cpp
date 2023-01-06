@@ -1,3 +1,28 @@
+/*
+socket() -> 연결되지 않은 새로운 소켓 생성
+connect() -> 로컬의 소켓과 원격 호스트 및 포트 사이에 TCP 커낵션 생성
+send() -> request 보냄
+recv() -> response 받음
+close() -> 소켓 닫음
+
+EX)
+1. ip 주소와 포트를 얻는다.
+2. 새로운 socket 생성(socket)
+3. 서버의 ip 포트로 연결(connect)
+
+- 서버와 연결 성공 -
+
+4. 요쳥(http request) 보냄(send)
+5. 응답(http response) 기다림(recv)
+
+- 서버로 부터 response를 받음 -
+
+6. http response를 처리한다.
+7. 커낵션을 닫는다(close)
+*/
+
+
+
 #include "../include/Client.hpp"
 
 Client::Client(std::string hostname, int port) : 
