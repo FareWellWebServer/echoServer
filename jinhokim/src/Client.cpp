@@ -21,8 +21,6 @@ EX)
 7. 커낵션을 닫는다(close)
 */
 
-
-
 #include "../include/Client.hpp"
 
 Client::Client(std::string hostname, int port) : 
