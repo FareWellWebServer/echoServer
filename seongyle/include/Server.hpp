@@ -20,7 +20,7 @@ class Server
 		sockaddr_in	server_addr_;
 		
 		/// @brief Accept the client, and return client fd
-		/// @param  
+		/// @param  void
 		/// @return client fd
 		int		Accept(void);
 		void	Bind(void);
