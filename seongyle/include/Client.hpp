@@ -20,9 +20,9 @@ class Client
 	 * @param port, addriess
 	 */
 		explicit	Client(const int& port, const std::string& address, int sin_family = AF_INET);
-		void		connecct(void);
+		void		ftConnect(void);
 		void		run(void);
-		void		close(void);
+		void		ftUnConnect(void);
 	/**
 	 * @brief Destroy the Client object
 	 * 
