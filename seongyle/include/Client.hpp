@@ -2,9 +2,10 @@
 # define CLIENT_HPP
 
 # include <iostream>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+# include <sys/socket.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <unistd.h>
 
 /**
  * @brief 
@@ -28,6 +29,7 @@ class Client
 	 */
 		virtual ~Client(void);
 	private:
+		const static int BUFFER_SIZE = 1024;
 		int	client_fd_;
 		sockaddr_in	server_addr_;
 
