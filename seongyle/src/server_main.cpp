@@ -6,10 +6,8 @@ int	main_process() {
 
 int main(int ac, char** av) {
 	try {
-		if (ac < 3) {
-		throw std::runtime_error("please, input one argument(port).");
-		return EXIT_FAILURE;
-		}
+		if (ac != 2)
+			throw std::runtime_error("please, input one argument(port).");
 		main_process();
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
