@@ -2,6 +2,9 @@
 
 void	main_process(int port) {	
 	Client client(port, "127.0.0.1");
+	client.ftConnect();
+	client.run();
+	client.ftUnConnect();
 }
 
 int main(int ac, char** av) {
