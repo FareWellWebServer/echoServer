@@ -1,6 +1,6 @@
 #include "../include/Server.hpp"
 
-int	main_process(const int& port) {	
+void	main_process(const int& port) {	
 	Server server(port);
 	server.Run();
 }
