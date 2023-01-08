@@ -32,8 +32,6 @@ class Client
 		const static int BUFFER_SIZE = 1024;
 		int	client_fd_;
 		sockaddr_in	server_addr_;
-
-
 };
 
 #endif
