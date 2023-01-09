@@ -2,6 +2,10 @@
 # define CLIENT_HPP
 
 # include <iostream>
+# include <sys/socket.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+# include <unistd.h>
 
 /**
  * @brief 
@@ -13,16 +17,21 @@ class Client
 	/**
 	 * @brief Construct a new Client object
 	 * 
-	 * @param fd 
+	 * @param port, addriess
 	 */
-		explicit Client(const int fd);
+		Client(const int& port, const std::string& address, int sin_family = AF_INET);
+		void		Connect(void);
+		void		Run(void);
+		void		UnConnect(void);
 	/**
 	 * @brief Destroy the Client object
 	 * 
 	 */
 		virtual ~Client(void);
 	private:
-
+		const static int BUFFER_SIZE = 1024;
+		int	client_fd_;
+		sockaddr_in	server_addr_;
 };
 
 #endif

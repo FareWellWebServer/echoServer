@@ -2,14 +2,31 @@
 # define SERVER_HPP
 
 # include <iostream>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <unistd.h>
 class Server
 {
 	public:
-		Server(void);
-		Server(const Server& src);
+		explicit Server(const int& port);
 		virtual ~Server(void);
-		Server& operator=(Server const& rhs);
+		void	Run();
+		
 	private:
+		const static int BACKLOG = 10;
+		const static int BUFFER_SIZE = 1024;
+		int server_fd_;
+		sockaddr_in	server_addr_;
+		
+		/// @brief Accept the client, and return client fd
+		/// @param  void
+		/// @return client fd
+		int		Accept(void);
+		void	Bind(void);
+		void	Listen(void);
+		void	Action();
 };
+
 
 #endif
