@@ -2,14 +2,18 @@
 # define SERVER_HPP
 
 # include <iostream>
-# include <cstring>
-# include <cstdlib>
 # include <unistd.h>
-# include <sys/socket.h>
-# include <arpa/inet.h>
+# include <map>
+# include <vector>
 # include <netdb.h>
+# include <arpa/inet.h>
+# include <sys/socket.h>
+# include <sys/types.h>
+# include <sys/event.h>
+# include <sys/time.h>
+# include <fcntl.h>
 
-# define    BACKLOG 5
+# define    BACKLOG 1024
 
 /**
  * @brief 
@@ -20,6 +24,11 @@ class Server {
         Server(int port);
         virtual ~Server(void);
 
+		std::string	getIp(void);
+        void    	changeEvents(std::vector<struct kevent>& change_list, int socket, int16_t filter,
+                                uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
+        void    	disconnect_client(int client_fd, std::map<int, std::string>& clients);
+
         int     set(void);
         void    setResponse(void);
         int     run(void);
@@ -27,7 +36,6 @@ class Server {
         int                 port_;    
         int                 server_fd_;
         sockaddr_in         address_;
-        int                 client_fd_;
         std::string         request_;
         std::string         response_;
 };
