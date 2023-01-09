@@ -7,6 +7,7 @@ int main(int ac, char **av) {
     for (std::size_t i = 0; av[1][i] != 0; i++) {
         if (!std::isdigit(av[1][i]))
             return (printError("Port is not number"));
+    }
 
 	Server server(atoi(av[1]));
 
