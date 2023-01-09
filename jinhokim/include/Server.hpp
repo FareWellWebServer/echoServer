@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <cstring>
+# include <cstdlib>
 # include <unistd.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
@@ -10,6 +11,10 @@
 
 # define    BACKLOG 5
 
+/**
+ * @brief 
+ * Server class, use socket communication for echo server
+ */
 class Server {
     public:
         Server(int port);

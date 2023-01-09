@@ -10,7 +10,7 @@ SERVER_SRCS = src/Server.cpp \
 				src/server_main.cpp
 
 CLIENT_SRCS = src/Client.cpp \
-				src/Client_main.cpp
+				src/client_main.cpp
 
 all: server client
 

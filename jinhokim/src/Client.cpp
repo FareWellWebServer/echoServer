@@ -29,6 +29,12 @@ Client::~Client(void) {
     close(client_fd_);
 }
 
+/**
+ * @brief 
+ * client setting
+ * @return int 
+ * 성공 시 0, 실패 시 1 반환
+ */
 int    Client::set(void) {
     // 소켓 생성
     client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -73,6 +79,11 @@ int    Client::run(void) {
 			return (printError("Failed to send data to server"));
 
         // response 받기
+        ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
+
+        char buffer[1024];
+
+        // recv(): used to receive the response from the server
         ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
         if (bytes_received < 0)
 			return (printError("Failed to receive data from server"));
