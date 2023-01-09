@@ -15,9 +15,10 @@ int main(int ac, char* av[])
 	host = av[1];
 	port = av[2];
 
-	clientfd = ft::OpenClientFd(host, port);
 	while (fgets(sendBuf, MAXBUF, stdin) != NULL)
 	{
+		clientfd = ft::OpenClientFd(host, port);
+		std::cout << strlen(sendBuf) << "\n";
 		send(clientfd, sendBuf, strlen(sendBuf), 0);
 		receiveCnt = recv(clientfd, recvBuf, MAXLINE, 0);
 		std::cout << recvBuf;
@@ -25,7 +26,7 @@ int main(int ac, char* av[])
 		{
 			recvBuf[i] = '\0';
 		}
+		close(clientfd);
 	}
-	close(clientfd);
 	exit(0);
 }

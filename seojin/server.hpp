@@ -11,33 +11,49 @@
 #include <sys/types.h> /* kqueue kevent */
 #include <netdb.h> /* getprotobyname */
 #include <fcntl.h> /* fcntl */
+#include <sys/event.h>
 #include <iostream>
+#include <set>
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
+#define MAXLISTEN 10
+#define BACKLOG 128
+#define DISABLE 0
+#define ENABLE 1
 
+
+struct Node
+{
+	std::string	host;
+	std::string	port;
+	int			fd;
+	int			status;
+};
 
 class Server
 {
 
 private:
-	std::string host_, port_;
-	int listenfd_, clientfd_, status_;
-	pollfd fds_[129];
+	int						kq_;
+	struct kevent			events_[MAXLISTEN + BACKLOG];
+	std::set<struct Node*>	server_;
+	std::set<struct Node*>	clients_;
 
 
+	void			Echo( int connfd );
+	bool			IsListenFd( int fd );
+	struct Node*	NewNode(const std::string& host, \
+							const std::string& port, \
+							int fd, \
+							int status);
 
 public:
-	void OpenListeningSocket(const std::string& host, const std::string& port);
-	void InitPollfd(int max_connect);
-	void Run( void );
-	void Echo( int connfd );
+	void	Listen( const std::string& host, const std::string& port );
+	void	Run( void );
 
 	Server();
-	Server( const std::string& host, const std::string& port );
 	~Server();
-
-	void Listen( void );
 
 
 };

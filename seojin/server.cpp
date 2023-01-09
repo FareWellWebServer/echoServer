@@ -5,23 +5,78 @@
 // #include <fstream>
 #include "server.hpp"
 
-#define DISABLE 0
-#define ENABLE 1
-#define MAXCONNECTION 128
-
-Server::Server() : host_("127.0.0.1"), port_("4242") {}
-Server::Server(const std::string& host, const std::string& port) : host_(host), port_(port) {}
-
-Server::~Server()
-{
-	close(listenfd_);
-}
+Server::Server() : kq_(kqueue()) {}
+Server::~Server() {}
 
 /* privave functions */
-void Server::OpenListeningSocket(const std::string& host, const std::string& port)
+void Server::Echo( int connfd )
 {
+	ssize_t n, receiveCnt;
+	char c, buf[MAXBUF];
+
+	while (1)
+	{
+		for(n = 0; n < MAXLINE; ++n)
+		{
+			receiveCnt = recv(connfd, &c, 1, 0);
+			if (receiveCnt == 1)
+			{
+				buf[n] = c;
+				if (c == '\n')
+				{
+					++n;
+					break;
+				}
+			}
+			else if (receiveCnt == 0)
+			{
+				if (n == 0)
+					return;
+				else
+					break;
+			}
+			else
+				return;
+		}
+		std::cout << "Server received " << n << " bytes\n";
+		buf[n] = '\0';
+		send(connfd, buf, n, 0);
+		return ;
+	}
+}
+bool Server::IsListenFd( int fd )
+{
+	std::set<struct Node*>::iterator it = server_.begin();
+	for(; it != server_.end(); ++it)
+	{
+		if (fd == (*it)->fd)
+			return true;
+	}
+	return false;
+}
+struct Node* Server::NewNode(const std::string& host, const std::string& port, int fd, int status)
+{
+	struct Node* new_node = new struct Node;
+
+	new_node->host = host;
+	new_node->port = port;
+	new_node->fd = fd;
+	new_node->status = status;
+	return new_node;
+}
+/* public functions */
+
+void Server::Listen(const std::string& host, const std::string& port)
+{
+	if (server_.size() == MAXLISTEN)
+	{
+		std::cerr << "Error: full of listening\n";
+		return;
+	}
+
+
 	struct addrinfo hints, *listp, *p;
-	int optval = ENABLE;
+	int listenfd, status, optval = ENABLE;
 	memset(&hints, 0, sizeof(struct addrinfo));
 
 	/*
@@ -62,19 +117,18 @@ void Server::OpenListeningSocket(const std::string& host, const std::string& por
 	hints.ai_flags |= AI_NUMERICHOST;
 
 
-	status_ = getaddrinfo(host.c_str(), port.c_str(), &hints, &listp);
-	if (status_ != 0)
+	status = getaddrinfo(host.c_str(), port.c_str(), &hints, &listp);
+	
+	if (status != 0)
 	{
-		listenfd_ = -1;
-		gai_strerror(status_);
+		gai_strerror(status);
 		return;
 	}
 
-
 	for(p = listp; p; p = p->ai_next)
 	{
-		listenfd_ = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if (listenfd_ < 0)
+		listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if (listenfd < 0)
 			continue;
 
 		/*
@@ -83,137 +137,177 @@ void Server::OpenListeningSocket(const std::string& host, const std::string& por
 					set or retrieved are socket options
 		SO_REUSERADDR - Even if port is already occupied by another
 						socket, we can use this port again.
-		optval - Defined ENABLE
+		optval - Defined as ENABLE
 		*/
-		setsockopt(listenfd_, SOL_SOCKET, SO_REUSEADDR, \
+		setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, \
 					reinterpret_cast<const void*>(&optval), \
 					sizeof(int));
 
-		if (bind(listenfd_, p->ai_addr, p->ai_addrlen) == 0)
+		if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
 			break;
-		close(listenfd_);
+		close(listenfd);
 	}
 
 	freeaddrinfo(listp);
 
 	if(p == NULL)
 	{
-		status_ = -1;
-		listenfd_ = -1;
-		std::cerr << gai_strerror(status_);
+		std::cerr << "Error: socket()\n";
 		return;
 	}
 
-	if (listen(listenfd_, 1024) < 0)
+	if (listen(listenfd, BACKLOG) < 0)
 	{
-		close(listenfd_);
-		status_ = -1;
+		close(listenfd);
+		std::cerr << "Error: listen()\n";
 		return;
 	}
+
+
+	struct kevent event;
+
+	EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+        std::cerr << "Error: kevent()\n";
+        return;
+    }
+
+	server_.insert(NewNode(host, port, listenfd, status));
 	std::cout << host << " is listening port on " << port << "\n";
 }
 
-void Server::InitPollfd(int max_connect)
-{
-	fds_[0].fd = listenfd_;
-	fds_[0].events = POLLIN;
-	for(int i = 1; i <= max_connect; ++i)
-		fds_[i].fd = -1;
-}
 void Server::Run( void )
 {
-	char		buffer[MAXBUF], client_host[MAXBUF], client_port[MAXBUF];
-	int			num_ready, connfd;
-	socklen_t	client_len;
-	struct		sockaddr_storage clientaddr;
+	char					buffer[MAXBUF];
+	char					client_host[MAXBUF];
+	char					client_port[MAXBUF];
+	int						num_ready, connfd, flags;
+	socklen_t				client_len;
+	struct sockaddr_storage	clientaddr;
+	struct kevent			event;
 
 
-	while (1)
+	while (true)
 	{
-		num_ready = poll(fds_, MAXCONNECTION + 1, -1);
-		if (fds_[0].revents & POLLIN)
+		int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
+        if (n == -1) {
+            std::cerr << "Error: kevent()\n";
+            return;
+        }
+		for (int idx = 0; idx < n; ++idx)
 		{
-			client_len = sizeof(struct sockaddr_storage);
-			connfd = accept(listenfd_, reinterpret_cast<struct sockaddr *>(&clientaddr), &client_len);
-			getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), client_len,\
+            // A read event on the socket means there is a new connection
+            if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ)
+			{
+				
+                // Accept the new connection
+                client_len = sizeof(clientaddr);
+                connfd = accept(events_[idx].ident, reinterpret_cast<struct sockaddr *>(&clientaddr), &client_len);
+                if (connfd == -1)
+				{
+                    if (errno != EWOULDBLOCK) {
+                        std::cerr << "Error: accept()\n";
+                        return;
+                    }
+                }
+				else
+				{
+                    // Set the new client socket to non-blocking mode
+                    flags = fcntl(connfd, F_GETFL, 0);
+                    if (flags == -1) {
+                        std::cerr << "Error: fcntl()\n";
+                        return;
+                    }
+                    flags |= O_NONBLOCK;
+                    if (fcntl(connfd, F_SETFL, flags) == -1) {
+                        std::cerr << "Error: fcntl()\n";
+                        return;
+                    }
+
+                    // Set up a kevent to monitor the client socket for read events
+                    EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+                    // Register the kevent with the kernel event queue
+                    if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+                        std::cerr << "Error: kevent()\n";
+                        return;
+                    }
+
+                    // Set up a kevent to monitor the client socket for write events
+                    EV_SET(&event, connfd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+
+                    // Register the kevent with the kernel event queue
+                    if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+                        std::cerr << "Error: kevent()\n";
+                        return;
+                    }
+                }
+				getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), client_len,\
 						client_host, MAXBUF,\
 						client_port, MAXBUF,\
 						0);
-			for(int i = 1; i <= MAXCONNECTION + 1; ++i)
-			{
-				if (fds_[i].fd < 0)
-				{
-					fds_[i].fd = connfd;
-					fds_[i].events = POLLIN;
-					break;
-				}
-			}
-			std::cout << "Connected to (" << client_host << ", " << client_port << ")\n";
-		}
-		else
-		{
-			for(int i = 1; i <= MAXCONNECTION + 1; ++i)
-			{
-				if (fds_[i].revents & POLLIN)
-				{
-					Echo(fds_[i].fd);
-					break;
-				}
-			}
-		}
-	}
-}
-void Server::Echo( int connfd )
-{
-	ssize_t n, receiveCnt;
-	char c, buf[MAXBUF];
 
-	while (1)
-	{
-		for(n = 0; n < MAXLINE; ++n)
-		{
-			receiveCnt = recv(connfd, &c, 1, 0);
-			if (receiveCnt == 1)
-			{
-				buf[n] = c;
-				if (c == '\n')
-				{
-					++n;
-					break;
-				}
-			}
-			else if (receiveCnt == 0)
-			{
-				if (n == 0)
-					return;
-				else
-					break;
-			}
+				clients_.insert(NewNode(client_host, client_port, connfd, 0));
+				std::cout << "Connected to (" << client_host << ", " << client_port << ")\n";
+            }
 			else
-				return;
+			{
+				Echo(events_[idx].ident);
+			}
 		}
-		std::cout << "Server received " << n << " bytes\n";
-		buf[n] = '\0';
-		send(connfd, buf, n, 0);
-		return ;
+
+	// while (1)
+	// {
+	// 	num_ready = poll(fds_, MAXCONNECTION + 1, -1);
+	// 	if (fds_[0].revents & POLLIN)
+	// 	{
+	// 		client_len = sizeof(struct sockaddr_storage);
+	// 		connfd = accept(listenfd, reinterpret_cast<struct sockaddr *>(&clientaddr), &client_len);
+	// 		getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), client_len,\
+	// 					client_host, MAXBUF,\
+	// 					client_port, MAXBUF,\
+	// 					0);
+	// 		for(int i = 1; i <= MAXCONNECTION + 1; ++i)
+	// 		{
+	// 			if (fds_[i].fd < 0)
+	// 			{
+	// 				fds_[i].fd = connfd;
+	// 				fds_[i].events = POLLIN;
+	// 				break;
+	// 			}
+	// 		}
+	// 		std::cout << "Connected to (" << client_host << ", " << client_port << ")\n";
+	// 	}
+	// 	else
+	// 	{
+	// 		for(int i = 1; i <= MAXCONNECTION + 1; ++i)
+	// 		{
+	// 			if (fds_[i].revents & POLLIN)
+	// 			{
+	// 				Echo(fds_[i].fd);
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+	// }
 	}
 }
 
-
-/* public functions */
-void Server::Listen( void )
-{
-	OpenListeningSocket(host_, port_);
-	InitPollfd( MAXCONNECTION );
-	Run();
-}
 
 int main(int ac, char* av[])
 {
+	Server server;
+
+	std::string host("127.0.0.1");
 	std::string port("8080");
-	std::string host("10.18.241.128");
-	Server server(host, port);
-	server.Listen();
+	server.Listen(host, port);
+	host = "10.19.208.43";
+	port = "8080";
+	server.Listen(host, port);
+	// host = "10.18.241.128";
+	port = "8081";
+	server.Listen(host, port);
+	server.Run();
 
 	return 0;
 }
