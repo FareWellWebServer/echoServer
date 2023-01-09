@@ -2,6 +2,8 @@
 socket() -> 연결되지 않은 새로운 소켓 생성
 bind() -> socket에 로컬 포트 번호 할당 
 listen() -> 커넥션을 받기 위해 로컬 소켓에 허용함을 표시
+kqueue(), kevent() -> 여러 클라이언트를 이벤트(recv, send)
+                        기반으로 커널 딴에서 처리함
 accept() -> 누군가 로컬 포트에 커낵션을 맺기를 기다림
 recv() -> request 받음
 send() -> response 보냄
@@ -11,7 +13,7 @@ EX)
 1. 새로운 socket 생성(socket)
 2. 80 포트로 socket을 묶는다.
 3. socket 커낵션을 허가함(listen)
-4. 커낵션을 기다림(accept)
+4. 클라이언트 커넥트 기다림(kqueue, accept)
 
 - 한 클라이언트와 커낵션됨 -
 5. 요청(http request)을 기다림(recv)
@@ -115,9 +117,8 @@ int Server::run(void) {
             if (curr_event->flags & EV_ERROR) {
                 if (curr_event->ident == static_cast<uintptr_t>(server_fd_))
                     return (printError("Server socket error"));
-                else {
+                else
                     disconnect_client(curr_event->ident, clients);
-                }
             }
             else if (curr_event->filter == EVFILT_READ) {
                 if (curr_event->ident == static_cast<uintptr_t>(server_fd_)) {
