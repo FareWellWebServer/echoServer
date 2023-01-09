@@ -150,9 +150,6 @@ int main(int ac, char **av) {
 			else if (currEvent->filter == EVFILT_WRITE) {
 				/* send Data to client*/
 				std::map<int, String>::iterator it = clients.find(currEvent->ident);
-				std::map<int, String>::iterator prev;
-				if (prev == it)
-					disconnectClient(currEvent->ident, clients);
 				if (it != clients.end()) {
 					int n;
 					std::cout << strlen(msg.c_str()) << std::endl;
@@ -161,10 +158,9 @@ int main(int ac, char **av) {
 						std::cerr << "client write error" << std::endl;
 						disconnectClient(currEvent->ident, clients);
 					}
-					else
-						clients[currEvent->ident].clear();
+					disconnectClient(currEvent->ident, clients);
+					clients[currEvent->ident].clear();
 				}
-				prev = it;
 			}
 		}
 	}
