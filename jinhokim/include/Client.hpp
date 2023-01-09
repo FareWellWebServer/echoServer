@@ -8,10 +8,6 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 
-/**
- * @brief 
- * Client class, use socket communication for echo server
- */
 class Client
 {
     public:

@@ -19,16 +19,14 @@ class Server {
         void    setResponse(void);
         int     run(void);
     private:
-        int                 _port;    
-        int                 _server_fd;
-        sockaddr_in         _address;
-        sockaddr_in         _client_address;
-        int                 _client_fd;
-        std::string         _request;
-        std::string         _response;
+        int                 port_;    
+        int                 server_fd_;
+        sockaddr_in         address_;
+        int                 client_fd_;
+        std::string         request_;
+        std::string         response_;
 };
 
 int printError(const std::string str);
-int checkArgument(int ac, char **av);
 
 #endif  // SERVER_HPP
