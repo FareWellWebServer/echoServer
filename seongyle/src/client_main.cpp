@@ -2,9 +2,9 @@
 
 void	main_process(int port) {	
 	Client client(port, "127.0.0.1");
-	client.ftConnect();
-	client.run();
-	client.ftUnConnect();
+	client.Connect();
+	client.Run();
+	client.UnConnect();
 }
 
 int main(int ac, char** av) {

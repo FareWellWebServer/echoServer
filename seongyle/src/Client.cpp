@@ -15,7 +15,7 @@ Client::Client(const int& port, const std::string& address, int sin_family)
     server_addr_.sin_port = htons(port);
 }
 
-void Client::ftConnect(void)
+void Client::Connect(void)
 {
 	if (connect(client_fd_, reinterpret_cast<sockaddr*>(&server_addr_), sizeof(server_addr_)) < 0) {
         std::cerr << "Error: " << strerror(errno) << std::endl;
@@ -23,7 +23,7 @@ void Client::ftConnect(void)
     }
 }
 
-void Client::run(void)
+void Client::Run(void)
 {
 	// Read data from the user and send it to the server
     while (true) {
@@ -51,12 +51,12 @@ void Client::run(void)
 
 }
 
-void Client::ftUnConnect(void)
+void Client::UnConnect(void)
 {
 	close(client_fd_);
 }
 
 Client::~Client(void)
 {
-	ftUnConnect();
+	UnConnect();
 }
