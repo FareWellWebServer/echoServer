@@ -29,44 +29,6 @@ Server::Server(int port) : _port(port) {}
 Server::~Server(void) {
     close(_client_fd);
 }
-/**
- * @brief 
- * socket 생성 -> fd 얻음  
- * @return int 
- * 성공 시 0, 실패 시 1 반환
- */
-int Server::createSocket(void) {
-    // AF_INET: specifies socket will use the IPv4 protocol, 
-    // SOCK_STREAM: specifies socket will use a stream-based protocol(in this case, TCP)
-    _server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_server_fd < 0)
-        return 1;
-    return 0;
-}
-
-/**
- * @brief 
- * socket에 ip 주소를 할당
- * @return int 
- * 성공 시 0, 실패 시 1 반환
- */
-int Server::bindSocket(void) {
-	/**
-	 * sockaddr_in: used to store IPv4 addresses
-	 * sin_family: specifies address is an IPv4 address
-	 * sin_port: specifies port number
-	 * sin_addr: specifies IP address of the server
-     * INADDR_ANY: specify a socket should listen on all available network interfaces
-	 */
-    _address.sin_family = AF_INET;
-    _address.sin_port = htons(_port);
-    _address.sin_addr.s_addr = INADDR_ANY;
-
-    int bind_result = bind(_server_fd, (sockaddr*)&_address, sizeof(_address));
-    if (bind_result < 0)
-        return 1;
-    return 0;
-}
 
 /**
  * @brief 
@@ -92,10 +54,25 @@ void    Server::setResponse(void) {
  * 성공 시 0, 실패 시 1 반환
  */
 int Server::set(void) {
-    if (createSocket())
+   // AF_INET: specifies socket will use the IPv4 protocol, 
+    // SOCK_STREAM: specifies socket will use a stream-based protocol(in this case, TCP)
+    _server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (_server_fd < 0)
         return (printError("Failed to create socket"));
 
-    if (bindSocket())
+	/**
+	 * sockaddr_in: used to store IPv4 addresses
+	 * sin_family: specifies address is an IPv4 address
+	 * sin_port: specifies port number
+	 * sin_addr: specifies IP address of the server
+     * INADDR_ANY: specify a socket should listen on all available network interfaces
+	 */
+    _address.sin_family = AF_INET;
+    _address.sin_port = htons(_port);
+    _address.sin_addr.s_addr = INADDR_ANY;
+
+    int bind_result = bind(_server_fd, (sockaddr*)&_address, sizeof(_address));
+    if (bind_result < 0)
         return (printError("Failed to bind socket to address"));
 
     int listen_result = listen(_server_fd, BACKLOG);

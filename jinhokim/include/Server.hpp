@@ -15,9 +15,6 @@ class Server {
         Server(int port);
         virtual ~Server(void);
 
-        int createSocket(void);
-        int bindSocket(void);
-
         int     set(void);
         void    setResponse(void);
         int     run(void);
