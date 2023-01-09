@@ -4,7 +4,7 @@ Client::Client(const int &port, const std::string &address, int sin_family) {
   // set the client socket
   client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
   if (client_fd_ < 0) {
-    throw std::runtime_error("Client error: socket create failed");
+    throw std::runtime_error("client error: socket create failed");
     return;
   }
 
@@ -17,7 +17,7 @@ Client::Client(const int &port, const std::string &address, int sin_family) {
 void Client::Connect(void) {
   if (connect(client_fd_, reinterpret_cast<sockaddr *>(&server_addr_),
               sizeof(server_addr_)) < 0) {
-    throw std::runtime_error("Client error: connect failed");
+    throw std::runtime_error("client error: connect failed");
     return;
   }
 }
@@ -33,7 +33,7 @@ void Client::Run(void) {
     }
     ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
     if (bytes_sent < 0) {
-      throw std::runtime_error("Client error: send failed");
+      throw std::runtime_error("client error: send failed");
       return;
     }
 
@@ -41,7 +41,7 @@ void Client::Run(void) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received = recv(client_fd_, buffer, BUFFER_SIZE, 0);
     if (bytes_received < 0) {
-      throw std::runtime_error("Client error: receive failed");
+      throw std::runtime_error("client error: receive failed");
       return;
     }
     std::cout << "Received: " << std::string(buffer, bytes_received)

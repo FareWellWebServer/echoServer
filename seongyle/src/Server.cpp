@@ -4,7 +4,7 @@ Server::Server(const int& port) {
   // Create the server socket
   server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd_ < 0) {
-    throw std::runtime_error("Server error");
+    throw std::runtime_error("server error: socket create faild");
   }
 
   // Bind the socket to a local address and port
@@ -27,7 +27,7 @@ int Server::Accept(void) {
   int client_fd = accept(server_fd_, reinterpret_cast<sockaddr*>(&client_addr),
                          &client_addr_len);
   if (client_fd < 0) {
-    throw std::runtime_error("Server error");
+    throw std::runtime_error("server error: accept failed");
     return 0;
   }
   return client_fd;
@@ -36,7 +36,7 @@ int Server::Accept(void) {
 void Server::Bind(void) {
   if (bind(server_fd_, reinterpret_cast<sockaddr*>(&server_addr_),
            sizeof(server_addr_)) < 0) {
-    throw std::runtime_error("Server error");
+    throw std::runtime_error("server error: bind failed");
     return;
   }
 }
@@ -44,7 +44,7 @@ void Server::Bind(void) {
 void Server::Listen(void) {
   // Start listening for incoming connections
   if (listen(server_fd_, BACKLOG) < 0) {
-    throw std::runtime_error("Server error");
+    throw std::runtime_error("server error: listen failed");
     return;
   }
 }
@@ -60,7 +60,7 @@ void Server::Action() {
     while (true) {
       ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
       if (bytes_received < 0) {
-        throw std::runtime_error("Server error");
+        throw std::runtime_error("server error: recv failed");
         return;
       }
       if (bytes_received == 0) {
@@ -69,7 +69,7 @@ void Server::Action() {
       }
       ssize_t bytes_sent = send(client_fd, buffer, bytes_received, 0);
       if (bytes_sent < 0) {
-        throw std::runtime_error("Server error");
+        throw std::runtime_error("server error: send failed");
         return;
       }
     }
