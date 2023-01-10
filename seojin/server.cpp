@@ -6,7 +6,11 @@
 #include "server.hpp"
 
 Server::Server() : kq_(kqueue()) {}
-Server::~Server() {}
+Server::~Server()
+{
+	ClearClientNode();
+	ClearServerNode();
+}
 
 /* privave functions */
 void Server::Echo( int connfd )
@@ -39,12 +43,14 @@ void Server::Echo( int connfd )
 				return;
 		}
 		std::cout << "Server received " << n << " bytes\n";
+		std::cout << buf;
 		buf[n] = '\0';
 		send(connfd, buf, n, 0);
+		sleep(3);
 		return ;
 	}
 }
-void Server::Delete( const std::string& host, const std::string& port, int fd )
+void Server::DeleteClientNode( const std::string& host, const std::string& port, int fd )
 {
 	std::set<struct Node*>::iterator it = clients_.begin();
 
@@ -54,10 +60,14 @@ void Server::Delete( const std::string& host, const std::string& port, int fd )
 			(*it)->port == port && \
 			(*it)->fd == fd)
 		{
+			close((*it)->fd);
+			delete(*it);
 			clients_.erase(*it);
+			std::cout << "Disconnected to (" << host << ", " << port << ")\n";
 			return;
 		}
 	}
+	std::cerr << "Error: DeleteClientNode(), no such client\n";
 }
 bool Server::IsListenFd( int fd )
 {
@@ -79,11 +89,29 @@ struct Node* Server::NewNode(const std::string& host, const std::string& port, i
 	new_node->status = status;
 	return new_node;
 }
-
+void Server::ClearServerNode( void )
+{
+	std::set<struct Node*>::iterator it = server_.begin();
+	for(; it != server_.end(); ++it)
+	{
+		close((*it)->fd);
+		delete(*it);
+	}
+	server_.clear();
+}
+void Server::ClearClientNode( void )
+{
+	std::set<struct Node*>::iterator it = clients_.begin();
+	for(; it != clients_.end(); ++it)
+	{
+		close((*it)->fd);
+		delete(*it);
+	}
+	clients_.clear();
+}
 
 
 /* public functions */
-
 void Server::Listen(const std::string& host, const std::string& port)
 {
 	if (server_.size() == MAXLISTEN)
@@ -91,7 +119,6 @@ void Server::Listen(const std::string& host, const std::string& port)
 		std::cerr << "Error: full of listening\n";
 		return;
 	}
-
 
 	struct addrinfo hints, *listp, *p;
 	int listenfd, status, optval = ENABLE;
@@ -133,7 +160,6 @@ void Server::Listen(const std::string& host, const std::string& port)
 	not `domain name' (ex: www.google.com)
 	*/
 	hints.ai_flags |= AI_NUMERICHOST;
-
 
 	status = getaddrinfo(host.c_str(), port.c_str(), &hints, &listp);
 
@@ -192,7 +218,6 @@ void Server::Listen(const std::string& host, const std::string& port)
 	server_.insert(NewNode(host, port, listenfd, status));
 	std::cout << host << " is listening port on " << port << "\n";
 }
-
 void Server::Run( void )
 {
 	if (server_.size() == 0)
@@ -223,7 +248,6 @@ void Server::Run( void )
             // A read event on the socket means there is a new connection
             if (IsListenFd(events_[idx].ident) && events_[idx].filter == EVFILT_READ)
 			{
-				
                 // Accept the new connection
                 client_len = sizeof(client_addr);
                 connfd = accept(events_[idx].ident, reinterpret_cast<struct sockaddr *>(&client_addr), &client_len);
@@ -237,16 +261,16 @@ void Server::Run( void )
 				else
 				{
                     // Set the new client socket to non-blocking mode
-                    flags = fcntl(connfd, F_GETFL, 0);
-                    if (flags == -1) {
-                        std::cerr << "Error: fcntl()\n";
-                        continue;
-                    }
-                    flags |= O_NONBLOCK;
-                    if (fcntl(connfd, F_SETFL, flags) == -1) {
-                        std::cerr << "Error: fcntl()\n";
-                        continue;
-                    }
+                    // flags = fcntl(connfd, F_GETFL, 0);
+                    // if (flags == -1) {
+                    //     std::cerr << "Error: fcntl()\n";
+                    //     continue;
+                    // }
+                    // flags |= O_NONBLOCK;
+                    // if (fcntl(connfd, F_SETFL, flags) == -1) {
+                    //     std::cerr << "Error: fcntl()\n";
+                    //     continue;
+                    // }
 
                     // Set up a kevent to monitor the client socket for read events
                     EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
@@ -258,34 +282,36 @@ void Server::Run( void )
                     }
 
                     // Set up a kevent to monitor the client socket for write events
-                    // EV_SET(&event, connfd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+                    EV_SET(&event, connfd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 
                     // Register the kevent with the kernel event queue
-                    // if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-                    //     std::cerr << "Error: kevent()\n";
-                    //     continue;
-                    // }
+                    if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+                        std::cerr << "Error: kevent()\n";
+                        continue;
+                    }
                 }
 				getnameinfo(reinterpret_cast<struct sockaddr *>(&client_addr), client_len,\
-						host, MAXBUF,\
-						port, MAXBUF,\
-						0);
+							host, MAXBUF,\
+							port, MAXBUF,\
+							0);
 
 				clients_.insert(NewNode(host, port, connfd, 0));
 				std::cout << "Connected to (" << host << ", " << port << ")\n";
             }
-			else
+			else if (events_[idx].filter == EVFILT_READ)
 			{
 				EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) { std::cerr << "Error: kevent()\n"; }
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
 				Echo(events_[idx].ident);
-				close(events_[idx].ident);
-				Delete(host, port, events_[idx].ident);
+				// http::doit(events_[idx].ident);
+				DeleteClientNode(host, port, events_[idx].ident);
+				// close(events_[idx].ident);
 			}
 		}
 	}
 }
 
+extern char** environ;
 
 int main(int ac, char* av[])
 {

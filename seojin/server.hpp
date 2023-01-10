@@ -14,6 +14,8 @@
 #include <sys/event.h>
 #include <iostream>
 #include <set>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #define MAXLINE 1000000
 #define MAXBUF 1000000
@@ -21,6 +23,18 @@
 #define BACKLOG 128
 #define DISABLE 0
 #define ENABLE 1
+
+struct rio_t
+{
+	int rio_fd;
+	int rio_cnt;
+	char *rio_bufptr;
+	char rio_buf[MAXBUF];
+};
+
+#include "robust_inout.hpp"
+#include "http.hpp"
+
 
 
 struct Node
@@ -42,9 +56,11 @@ private:
 
 
 	void			Echo( int connfd );
-	void			Delete(const std::string& host, \
+	void			DeleteClientNode(const std::string& host, \
 							const std::string& port, \
 							int fd);
+	void			ClearServerNode( void );
+	void			ClearClientNode( void );
 	bool			IsListenFd( int fd );
 	struct Node*	NewNode(const std::string& host, \
 							const std::string& port, \
