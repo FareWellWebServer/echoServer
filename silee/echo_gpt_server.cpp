@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   serv_addr.sin_port = htons(std::stoi(argv[1]));
 
-  // Bind the socket to the given port
+  // Bind the socket to the given port (ip주소와 port번호 부여.)
   sockaddr* addr_ptr = reinterpret_cast<sockaddr*>(&serv_addr);
   if (bind(sockfd, addr_ptr, sizeof(serv_addr)) < 0) {
     std::cerr << "Error binding socket to port" << std::endl;
@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
   }
 
   // Start listening for connections
+  // listen 이후 client에서 connect 함수 호출 가능
   if (listen(sockfd, 5) < 0) {
     std::cerr << "Error listening for connections" << std::endl;
     return 1;
