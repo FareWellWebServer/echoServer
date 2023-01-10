@@ -44,6 +44,21 @@ void Server::Echo( int connfd )
 		return ;
 	}
 }
+void Server::Delete( const std::string& host, const std::string& port, int fd )
+{
+	std::set<struct Node*>::iterator it = clients_.begin();
+
+	for(; it != clients_.end(); ++it)
+	{
+		if ((*it)->host == host && \
+			(*it)->port == port && \
+			(*it)->fd == fd)
+		{
+			clients_.erase(*it);
+			return;
+		}
+	}
+}
 bool Server::IsListenFd( int fd )
 {
 	std::set<struct Node*>::iterator it = server_.begin();
@@ -64,6 +79,9 @@ struct Node* Server::NewNode(const std::string& host, const std::string& port, i
 	new_node->status = status;
 	return new_node;
 }
+
+
+
 /* public functions */
 
 void Server::Listen(const std::string& host, const std::string& port)
@@ -118,14 +136,14 @@ void Server::Listen(const std::string& host, const std::string& port)
 
 
 	status = getaddrinfo(host.c_str(), port.c_str(), &hints, &listp);
-	
+
 	if (status != 0)
 	{
 		gai_strerror(status);
 		return;
 	}
 
-	for(p = listp; p; p = p->ai_next)
+	for (p = listp; p; p = p->ai_next)
 	{
 		listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if (listenfd < 0)
@@ -163,7 +181,6 @@ void Server::Listen(const std::string& host, const std::string& port)
 		return;
 	}
 
-
 	struct kevent event;
 
 	EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
@@ -178,12 +195,19 @@ void Server::Listen(const std::string& host, const std::string& port)
 
 void Server::Run( void )
 {
+	if (server_.size() == 0)
+	{
+		std::cerr << "Error: no listening port\n";
+		return;
+	}
+
+
 	char					buffer[MAXBUF];
-	char					client_host[MAXBUF];
-	char					client_port[MAXBUF];
-	int						num_ready, connfd, flags;
+	char					host[MAXBUF];
+	char					port[MAXBUF];
+	int						connfd, flags;
 	socklen_t				client_len;
-	struct sockaddr_storage	clientaddr;
+	struct sockaddr_storage	client_addr;
 	struct kevent			event;
 
 
@@ -201,13 +225,13 @@ void Server::Run( void )
 			{
 				
                 // Accept the new connection
-                client_len = sizeof(clientaddr);
-                connfd = accept(events_[idx].ident, reinterpret_cast<struct sockaddr *>(&clientaddr), &client_len);
+                client_len = sizeof(client_addr);
+                connfd = accept(events_[idx].ident, reinterpret_cast<struct sockaddr *>(&client_addr), &client_len);
                 if (connfd == -1)
 				{
                     if (errno != EWOULDBLOCK) {
                         std::cerr << "Error: accept()\n";
-                        return;
+                        continue;
                     }
                 }
 				else
@@ -216,12 +240,12 @@ void Server::Run( void )
                     flags = fcntl(connfd, F_GETFL, 0);
                     if (flags == -1) {
                         std::cerr << "Error: fcntl()\n";
-                        return;
+                        continue;
                     }
                     flags |= O_NONBLOCK;
                     if (fcntl(connfd, F_SETFL, flags) == -1) {
                         std::cerr << "Error: fcntl()\n";
-                        return;
+                        continue;
                     }
 
                     // Set up a kevent to monitor the client socket for read events
@@ -230,66 +254,35 @@ void Server::Run( void )
                     // Register the kevent with the kernel event queue
                     if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
                         std::cerr << "Error: kevent()\n";
-                        return;
+                        continue;
                     }
 
                     // Set up a kevent to monitor the client socket for write events
-                    EV_SET(&event, connfd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+                    // EV_SET(&event, connfd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 
                     // Register the kevent with the kernel event queue
-                    if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
-                        std::cerr << "Error: kevent()\n";
-                        return;
-                    }
+                    // if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+                    //     std::cerr << "Error: kevent()\n";
+                    //     continue;
+                    // }
                 }
-				getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), client_len,\
-						client_host, MAXBUF,\
-						client_port, MAXBUF,\
+				getnameinfo(reinterpret_cast<struct sockaddr *>(&client_addr), client_len,\
+						host, MAXBUF,\
+						port, MAXBUF,\
 						0);
 
-				clients_.insert(NewNode(client_host, client_port, connfd, 0));
-				std::cout << "Connected to (" << client_host << ", " << client_port << ")\n";
+				clients_.insert(NewNode(host, port, connfd, 0));
+				std::cout << "Connected to (" << host << ", " << port << ")\n";
             }
 			else
 			{
+				EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) { std::cerr << "Error: kevent()\n"; }
 				Echo(events_[idx].ident);
+				close(events_[idx].ident);
+				Delete(host, port, events_[idx].ident);
 			}
 		}
-
-	// while (1)
-	// {
-	// 	num_ready = poll(fds_, MAXCONNECTION + 1, -1);
-	// 	if (fds_[0].revents & POLLIN)
-	// 	{
-	// 		client_len = sizeof(struct sockaddr_storage);
-	// 		connfd = accept(listenfd, reinterpret_cast<struct sockaddr *>(&clientaddr), &client_len);
-	// 		getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), client_len,\
-	// 					client_host, MAXBUF,\
-	// 					client_port, MAXBUF,\
-	// 					0);
-	// 		for(int i = 1; i <= MAXCONNECTION + 1; ++i)
-	// 		{
-	// 			if (fds_[i].fd < 0)
-	// 			{
-	// 				fds_[i].fd = connfd;
-	// 				fds_[i].events = POLLIN;
-	// 				break;
-	// 			}
-	// 		}
-	// 		std::cout << "Connected to (" << client_host << ", " << client_port << ")\n";
-	// 	}
-	// 	else
-	// 	{
-	// 		for(int i = 1; i <= MAXCONNECTION + 1; ++i)
-	// 		{
-	// 			if (fds_[i].revents & POLLIN)
-	// 			{
-	// 				Echo(fds_[i].fd);
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// }
 	}
 }
 
@@ -300,13 +293,15 @@ int main(int ac, char* av[])
 
 	std::string host("127.0.0.1");
 	std::string port("8080");
+
 	server.Listen(host, port);
-	host = "10.19.208.43";
-	port = "8080";
+
+	port = "4242";
 	server.Listen(host, port);
-	// host = "10.18.241.128";
-	port = "8081";
+
+	port = "4244";
 	server.Listen(host, port);
+
 	server.Run();
 
 	return 0;
@@ -320,7 +315,7 @@ int main(int ac, char* av[])
 // {
 // 	int listenfd, connfd;
 // 	socklen_t clientlen;
-// 	struct sockaddr_storage clientaddr;
+// 	struct sockaddr_storage client_addr;
 // 	char clientHostname[MAXLINE], clientPort[MAXLINE];
 
 // 	if (ac != 2)
@@ -334,8 +329,8 @@ int main(int ac, char* av[])
 // 	while (1)
 // 	{
 // 		clientlen = sizeof(struct sockaddr_storage);
-// 		connfd = accept(listenfd, reinterpret_cast<struct sockaddr *>(&clientaddr), &clientlen);
-// 		getnameinfo(reinterpret_cast<struct sockaddr *>(&clientaddr), clientlen,\
+// 		connfd = accept(listenfd, reinterpret_cast<struct sockaddr *>(&client_addr), &clientlen);
+// 		getnameinfo(reinterpret_cast<struct sockaddr *>(&client_addr), clientlen,\
 // 					clientHostname, MAXLINE,\
 // 					clientPort, MAXLINE,\
 // 					0);

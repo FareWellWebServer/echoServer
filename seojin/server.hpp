@@ -42,6 +42,9 @@ private:
 
 
 	void			Echo( int connfd );
+	void			Delete(const std::string& host, \
+							const std::string& port, \
+							int fd);
 	bool			IsListenFd( int fd );
 	struct Node*	NewNode(const std::string& host, \
 							const std::string& port, \

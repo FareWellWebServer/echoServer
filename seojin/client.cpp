@@ -18,7 +18,6 @@ int main(int ac, char* av[])
 	while (fgets(sendBuf, MAXBUF, stdin) != NULL)
 	{
 		clientfd = ft::OpenClientFd(host, port);
-		std::cout << strlen(sendBuf) << "\n";
 		send(clientfd, sendBuf, strlen(sendBuf), 0);
 		receiveCnt = recv(clientfd, recvBuf, MAXLINE, 0);
 		std::cout << recvBuf;
