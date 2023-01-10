@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <vector>
 class Server {
  public:
   explicit Server(const int& port);
@@ -19,6 +20,10 @@ class Server {
   const static int BUFFER_SIZE = 1024;
   int server_fd_;
   sockaddr_in server_addr_;
+  int kq_;
+  struct kevent ev_set_;
+  struct kevent ev_list_;
+  std::vector<int> clients_;
 
   /// @brief Accept the client, and return client fd
   /// @param  void
