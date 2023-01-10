@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <exception>
+
 class my_server {
 	public:
 		class Socket_Create_Failed : public std::exception {
@@ -47,9 +49,9 @@ class my_server {
 		void	Recv_n_Send(int c_sock, char *buffer);
 		sockaddr_in client_address_;
 		socklen_t	client_address_size_;
+	private:
 		int sock_;
 		sockaddr_in server_address_;
-	private:
 };
 
 #endif

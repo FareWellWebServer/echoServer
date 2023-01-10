@@ -51,6 +51,7 @@ void my_client::Send_Msg() {
     if (bytes_sent < 0)
         throw my_client::NoBytesSent();
     char buffer[BUFFER_SIZE];
+    std::memset(buffer, 0 ,BUFFER_SIZE - 1);
     int bytes_received = recv(sock_, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0)
         throw my_client::NoBytesRecived();

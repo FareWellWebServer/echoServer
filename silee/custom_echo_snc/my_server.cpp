@@ -13,7 +13,7 @@ const char * my_server::Listen_Failed::what() const throw() {
 }
 
 const char * my_server::Client_Socket_Create_Failed::what() const throw() {
-    return ("Socket Create Failed");
+    return ("Client Socket Create Failed");
 }
 
 const char * my_server::NoBytesRecived::what() const throw() {
