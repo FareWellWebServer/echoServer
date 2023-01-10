@@ -12,11 +12,11 @@
 
 class my_client
 {
-  private:
-  public:
-    my_client(void);
-    ~my_client(void);
-    void  main_client(char **argv);
+	private:
+	public:
+		my_client(void);
+		~my_client(void);
+		void  main_client(char **argv);
 };
 
 #endif
