@@ -17,10 +17,10 @@
 #define MAXBUF 1000000
 
 
-namespace openFd
+namespace ft
 {
-	int openListenFd(char *port);
-	int openClientFd(char *hostname, char *port);
+	int OpenListenFd(char *port);
+	int OpenClientFd(char *hostname, char *port);
 }
 
 

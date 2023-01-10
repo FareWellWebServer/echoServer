@@ -1,10 +1,9 @@
-#include "echoServer.hpp"
+#include "echo_server.hpp"
 
-
-namespace openFd
+namespace ft
 {
 
-int openClientFd(char *hostname, char *port)
+int OpenClientFd(char *hostname, char *port)
 {
 	int clientfd;
 	struct addrinfo hints, *listp, *p;
@@ -40,7 +39,7 @@ int openClientFd(char *hostname, char *port)
 }
 
 
-int openListenFd(char *port)
+int OpenListenFd(char *port)
 {
 	struct addrinfo hints, *listp, *p;
 	int listenfd, optval = 1;

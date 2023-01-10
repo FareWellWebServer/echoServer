@@ -1,4 +1,4 @@
-#include "echoServer.hpp"
+#include "echo_server.hpp"
 
 
 int main(int ac, char* av[])
@@ -15,9 +15,9 @@ int main(int ac, char* av[])
 	host = av[1];
 	port = av[2];
 
-	clientfd = openFd::openClientFd(host, port);
 	while (fgets(sendBuf, MAXBUF, stdin) != NULL)
 	{
+		clientfd = ft::OpenClientFd(host, port);
 		send(clientfd, sendBuf, strlen(sendBuf), 0);
 		receiveCnt = recv(clientfd, recvBuf, MAXLINE, 0);
 		std::cout << recvBuf;
@@ -25,7 +25,7 @@ int main(int ac, char* av[])
 		{
 			recvBuf[i] = '\0';
 		}
+		close(clientfd);
 	}
-	close(clientfd);
 	exit(0);
 }
