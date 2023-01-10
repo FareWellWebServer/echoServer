@@ -21,8 +21,11 @@ class Server {
   int socket_option_;
   int server_fd_;
   sockaddr_in server_addr_;
+  int kq_;
+  int kq_ret_;
+  struct kevent event_;
+  struct kevent event_trigger_;
   std::vector<int> clients_;
-
   /// @brief Accept the client, and return client fd
   /// @param  void
   /// @return client fd

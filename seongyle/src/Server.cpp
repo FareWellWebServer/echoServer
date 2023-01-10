@@ -19,9 +19,22 @@ Server::Server(const int& port) : socket_option_(1) {
   server_addr_.sin_family = AF_INET;
   server_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr_.sin_port = htons(port);
+
+  // TODO: 추후 kQueuHandler로 위임.
+  // init kqueue;
+  kq_ = kqueue();
+  if (kq_ == -1) {
+    throw std::runtime_error("server error: kq error");
+  }
   // init kevent
-  struct kevent ev_set;
-  EV_SET(&ev_set, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
+  EV_SET(&event_, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
+  kq_ret_ = kevent(kq_, &event_, 1, NULL, 0, NULL);
+  if (kq_ret_ == -1) {
+    throw std::runtime_error("server error : kq event failed");
+  }
+  if (event_.flags & EV_ERROR) {
+    throw std::runtime_error("server error : event someting wrong");
+  }
 }
 
 Server::~Server(void) { close(server_fd_); }
