@@ -18,6 +18,7 @@ class Server {
  private:
   const static int BACKLOG = 10;
   const static int BUFFER_SIZE = 1024;
+  int socket_option_ = 1;
   int server_fd_;
   sockaddr_in server_addr_;
   int kq_;
