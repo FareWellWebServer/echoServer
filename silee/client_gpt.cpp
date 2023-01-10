@@ -31,7 +31,9 @@ int main(int argc, char* argv[])
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = inet_addr(argv[1]);
     server_address.sin_port = htons(std::atoi(argv[2]));
-    
+
+
+
     if (connect(sock, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address)) < 0) {
         std::cerr << "Failed to connect to the server" << std::endl;
         return 1;
