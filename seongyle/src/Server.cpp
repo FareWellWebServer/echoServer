@@ -56,8 +56,12 @@ int Server::Accept(void) {
     throw std::runtime_error("server error: accept failed");
     return 0;
   }
+  EV_SET(&event_, client_fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+  if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error("server error: kevnet failed");
+  }
+  clients_.push_back(client_fd);
   std::cout << "new connection" << std::endl;
-  return client_fd;
 }
 
 void Server::Bind(void) {
@@ -83,13 +87,7 @@ void Server::Action() {
 
   for (int i = 0; i < exist_events; i++) {
     if (event_trigger[i].ident == server_fd_) {
-      // new connection
-      const int client_fd = Accept();
-      EV_SET(&event_, client_fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-      if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
-        throw std::runtime_error("server error: kevnet failed");
-      }
-      clients_.push_back(client_fd);
+      Accept();
     } else {
       // already connection
       int client_fd = event_trigger[i].ident;
