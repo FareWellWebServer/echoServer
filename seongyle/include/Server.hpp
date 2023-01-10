@@ -3,12 +3,14 @@
 
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <sys/event.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <iostream>
 #include <vector>
+
 class Server {
  public:
   explicit Server(const int& port);
@@ -21,10 +23,8 @@ class Server {
   int socket_option_;
   int server_fd_;
   sockaddr_in server_addr_;
-  int kq_;
-  int kq_ret_;
   struct kevent event_;
-  struct kevent event_trigger_;
+  int kq_;
   std::vector<int> clients_;
   /// @brief Accept the client, and return client fd
   /// @param  void
