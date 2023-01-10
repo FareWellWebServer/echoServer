@@ -2,6 +2,7 @@
 #define KQUEUE_HANDLER_HPP
 
 #include <sys/event.h>
+#include <unistd.h>
 
 #include <vector>
 
