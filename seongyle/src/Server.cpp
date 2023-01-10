@@ -44,24 +44,57 @@ Server::~Server(void) {
 void Server::Run() {
   Bind();
   Listen();
-  Action();
+  while (true) {
+    Action();
+  }
 }
 
-int Server::Accept(void) {
+void Server::Accept(void) {
   sockaddr_in client_addr;
   socklen_t client_addr_len = sizeof(client_addr);
   int client_fd = accept(server_fd_, reinterpret_cast<sockaddr*>(&client_addr),
                          &client_addr_len);
   if (client_fd < 0) {
     throw std::runtime_error("server error: accept failed");
-    return 0;
   }
   EV_SET(&event_, client_fd, EVFILT_READ, EV_ADD, 0, 0, 0);
   if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("server error: kevnet failed");
   }
   clients_.push_back(client_fd);
-  std::cout << "new connection" << std::endl;
+  std::cout << "new connection"
+            << " client fd:" << client_fd << std::endl;
+}
+
+int Server::Recv(int& client_fd, char* buffer, int flags) {
+  ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, flags);
+  if (bytes_received == 0) {
+    close(client_fd);
+    // Remove client from kqueue
+    EV_SET(&event_, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
+    if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
+      throw std::runtime_error("server error: kevent failed");
+    }
+    // Removw client from clients vector
+    for (int i = 0; i < clients_.size(); i++) {
+      if (clients_[i] == client_fd) {
+        clients_.erase(clients_.begin() + i);
+        break;
+      }
+    }
+    if (bytes_received == -1) {
+      throw std::runtime_error("server error: recv failed");
+    }
+  }
+  return bytes_received;
+}
+
+void Server::Send(int& client_fd, char* buffer, int flags, int bytes_received) {
+  ssize_t bytes_sent = send(client_fd, buffer, bytes_received, flags);
+  if (bytes_sent < 0) {
+    throw std::runtime_error("server error: send failed");
+    return;
+  }
 }
 
 void Server::Bind(void) {
@@ -80,44 +113,19 @@ void Server::Listen(void) {
 
 void Server::Action() {
   struct kevent event_trigger[BACKLOG];
+  char buffer[BUFFER_SIZE];
   int exist_events = kevent(kq_, NULL, 0, event_trigger, BACKLOG, NULL);
   if (exist_events == -1) {
     throw std::runtime_error("server error: kevent failed");
   }
-
   for (int i = 0; i < exist_events; i++) {
     if (event_trigger[i].ident == server_fd_) {
       Accept();
-    } else {
-      // already connection
-      int client_fd = event_trigger[i].ident;
-      char buffer[BUFFER_SIZE];
-      ssize_t bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
-      if (bytes_received < 0) {
-        throw std::runtime_error("server error: recv failed");
-        return;
-      }
-      if (bytes_received == 0) {
-        close(client_fd);
-        // Remove client from kqueue
-        EV_SET(&event_, client_fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
-        if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
-          throw std::runtime_error("server error: kevent failed");
-        }
-        // Removw client from clients vector
-        for (int i = 0; i < clients_.size(); i++) {
-          if (clients_[i] == client_fd) {
-            clients_.erase(clients_.begin() + i);
-            break;
-          }
-        }
-      } else {
-        ssize_t bytes_sent = send(client_fd, buffer, bytes_received, 0);
-        if (bytes_sent < 0) {
-          throw std::runtime_error("server error: send failed");
-          return;
-        }
-      }
+      continue;
     }
+    // already connection
+    int client_fd = event_trigger[i].ident;
+    int bytes_received = Recv(client_fd, buffer, 0);
+    Send(client_fd, buffer, 0, bytes_received);
   }
 }

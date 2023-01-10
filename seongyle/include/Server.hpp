@@ -29,7 +29,9 @@ class Server {
   /// @brief Accept the client, and return client fd
   /// @param  void
   /// @return client fd
-  int Accept(void);
+  void Accept(void);
+  int Recv(int& client_fd, char* buffer, int flags);
+  void Send(int& client_fd, char* buffer, int flags, int bytes_received);
   void Bind(void);
   void Listen(void);
   void Action();
