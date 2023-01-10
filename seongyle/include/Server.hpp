@@ -18,12 +18,9 @@ class Server {
  private:
   const static int BACKLOG = 10;
   const static int BUFFER_SIZE = 1024;
-  int socket_option_ = 1;
+  int socket_option_;
   int server_fd_;
   sockaddr_in server_addr_;
-  int kq_;
-  struct kevent ev_set_;
-  struct kevent ev_list_;
   std::vector<int> clients_;
 
   /// @brief Accept the client, and return client fd

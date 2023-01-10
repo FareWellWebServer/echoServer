@@ -1,16 +1,27 @@
 #include "../include/Server.hpp"
 
-Server::Server(const int& port) {
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
+Server::Server(const int& port) : socket_option_(1) {
   // Create the server socket
   server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd_ < 0) {
     throw std::runtime_error("server error: socket create faild");
+  }
+  if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &socket_option_,
+                 sizeof(socket_option_)) == -1) {
+    throw std::runtime_error(strerror(errno));
   }
 
   // Bind the socket to a local address and port
   server_addr_.sin_family = AF_INET;
   server_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr_.sin_port = htons(port);
+  // init kevent
+  struct kevent ev_set;
+  EV_SET(&ev_set, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
 }
 
 Server::~Server(void) { close(server_fd_); }
@@ -37,7 +48,6 @@ void Server::Bind(void) {
   if (bind(server_fd_, reinterpret_cast<sockaddr*>(&server_addr_),
            sizeof(server_addr_)) < 0) {
     throw std::runtime_error("server error: bind failed");
-    return;
   }
 }
 
@@ -45,9 +55,7 @@ void Server::Listen(void) {
   // Start listening for incoming connections
   if (listen(server_fd_, BACKLOG) < 0) {
     throw std::runtime_error("server error: listen failed");
-    return;
   }
-  fcntl(server_fd_, F_SETFL, O_NONBLOCK);
 }
 
 void Server::Action() {
