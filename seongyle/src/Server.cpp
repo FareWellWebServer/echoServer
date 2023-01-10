@@ -47,6 +47,7 @@ void Server::Listen(void) {
     throw std::runtime_error("server error: listen failed");
     return;
   }
+  fcntl(server_fd_, F_SETFL, O_NONBLOCK);
 }
 
 void Server::Action() {
