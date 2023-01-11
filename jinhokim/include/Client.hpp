@@ -23,6 +23,7 @@ class Client {
         std::string	response_;
 };
 
-int PrintError(const std::string str);
+void    CheckArgument(int ac, char** av);
+int     PrintError(const std::string str);
 
 #endif  // CLIENT_HPP

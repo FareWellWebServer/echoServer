@@ -7,10 +7,11 @@ YELLOW = \033[33m
 RESET = \033[0m
 
 SERVER_SRCS = src/Server.cpp \
-				src/server_main.cpp
+				src/http.cpp \
+				src/server_main.cpp \
 
 CLIENT_SRCS = src/Client.cpp \
-				src/client_main.cpp
+				src/client_main.cpp \
 
 all: server client
 

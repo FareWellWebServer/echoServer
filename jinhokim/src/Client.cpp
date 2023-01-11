@@ -30,20 +30,18 @@ Client::~Client(void) {
 }
 
 int    Client::Set(void) {
-    // 소켓 생성
     client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd_ < 0)
-        return (PrintError("Failed to create socket"));
+        throw std::runtime_error("Failed to create socket");
 
     server_address_.sin_family = AF_INET;
     server_address_.sin_port = htons(port_);
     server_address_.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    // 서버와 연결
     int connect_result = connect(client_fd_, (sockaddr*)&server_address_, \
                                     sizeof(server_address_));
     if (connect_result < 0)
-        return (PrintError("Failed to connect to server"));
+        throw std::runtime_error("Failed to connect to server");
 
 	std::cout << "Connected to server" << std::endl;
 
@@ -54,7 +52,6 @@ int    Client::Run(void) {
     char buffer[1024];
 
     while (42) {
-        // request 입력 받기
         std::string message;
         std::getline(std::cin, message);
         if (std::cin.eof() || !message.compare("exit")) {
@@ -62,22 +59,29 @@ int    Client::Run(void) {
             break ;
         }
 
-        // request 보내기
         ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
         if (bytes_sent < 0)
-			return (PrintError("Failed to send data to server"));
+            throw std::runtime_error("Failed to send data to server");
 
-        // response 받기
         ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
         if (bytes_received < 0)
-			return (PrintError("Failed to receive data from server"));
+            throw std::runtime_error("Failed to receive data from server");
         else if (bytes_received == 0)
-			return (PrintError("Server disconnected"));
+            throw std::runtime_error("Server disconnected");
 
         response_ = std::string(buffer, bytes_received);
         std::cout << "Received from server: " << response_ << std::endl;
     }
     return 0;
+}
+
+void CheckArgument(int ac, char** av) {
+    if (ac < 2)
+        throw std::runtime_error("Few argument error");
+    for (std::size_t i = 0; av[1][i] != 0; i++) {
+        if (!std::isdigit(av[1][i]))
+            throw std::runtime_error("Port is not number");
+    }
 }
 
 int PrintError(const std::string str) {
