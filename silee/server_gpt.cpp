@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
 
 		// Receive messages from the client and send them back
 		char buffer[BUFFER_SIZE];
+		
 		while (true) {
 			std::memset(buffer, 0, BUFFER_SIZE);
 			int bytes_received = recv(client_sock, buffer, BUFFER_SIZE - 1, 0);
