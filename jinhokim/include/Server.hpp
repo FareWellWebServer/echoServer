@@ -20,7 +20,6 @@
 # define NOT_FOUND_CONTENT "<h1>404 Not Found</h1>\n"
 # define SERVER_ERROR_CONTENT "<h1>500 Internal Server Error</h1>\n"
 
-
 /**
  * @brief 
  * Server class, use socket communication for echo server
@@ -30,14 +29,14 @@ class Server {
         Server(int port);
         virtual ~Server(void);
 
-		std::string	getIp(void);
-        void    	changeEvents(std::vector<struct kevent>& change_list, int socket, int16_t filter,
+		std::string	GetIp(void);
+        void    	ChangeEvents(std::vector<struct kevent>& change_list, int socket, int16_t filter,
                                 uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
-        void    	disconnect_client(int client_fd, std::map<int, std::string>& clients);
+        void    	DisconnectClient(int client_fd, std::map<int, std::string>& clients);
 
-        int     set(void);
-        void    setResponse(void);
-        int     run(void);
+        int     Set(void);
+        void    SetResponse(void);
+        int     Run(void);
     private:
         int                 port_;    
         int                 server_fd_;
@@ -46,7 +45,8 @@ class Server {
         std::string         response_;
 };
 
-int printError(const std::string str);
+int PrintError(const std::string str);
+
 void fill_header(char *header, int status, long len, std::string type);
 void handle_404(int asock);
 void handle_500(int asock);

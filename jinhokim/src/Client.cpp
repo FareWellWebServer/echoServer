@@ -29,33 +29,28 @@ Client::~Client(void) {
     close(client_fd_);
 }
 
-int    Client::set(void) {
+int    Client::Set(void) {
     // 소켓 생성
     client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd_ < 0)
-        return (printError("Failed to create socket"));
-
-    server_ = gethostbyname("localhost");
-    if (!server_)
-        return (printError("Failed to resolve hostname"));
+        return (PrintError("Failed to create socket"));
 
     server_address_.sin_family = AF_INET;
     server_address_.sin_port = htons(port_);
-    std::memcpy(&server_address_.sin_addr.s_addr, server_->h_addr, \
-					server_->h_length);
+    server_address_.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     // 서버와 연결
     int connect_result = connect(client_fd_, (sockaddr*)&server_address_, \
                                     sizeof(server_address_));
     if (connect_result < 0)
-        return (printError("Failed to connect to server"));
+        return (PrintError("Failed to connect to server"));
 
 	std::cout << "Connected to server" << std::endl;
 
     return 0;
 }
 
-int    Client::run(void) {
+int    Client::Run(void) {
     char buffer[1024];
 
     while (42) {
@@ -70,14 +65,14 @@ int    Client::run(void) {
         // request 보내기
         ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
         if (bytes_sent < 0)
-			return (printError("Failed to send data to server"));
+			return (PrintError("Failed to send data to server"));
 
         // response 받기
         ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
         if (bytes_received < 0)
-			return (printError("Failed to receive data from server"));
+			return (PrintError("Failed to receive data from server"));
         else if (bytes_received == 0)
-			return (printError("Server disconnected"));
+			return (PrintError("Server disconnected"));
 
         response_ = std::string(buffer, bytes_received);
         std::cout << "Received from server: " << response_ << std::endl;
@@ -85,7 +80,7 @@ int    Client::run(void) {
     return 0;
 }
 
-int printError(const std::string str) {
+int PrintError(const std::string str) {
     std::cerr << str << std::endl;
     return 1;
 }	
