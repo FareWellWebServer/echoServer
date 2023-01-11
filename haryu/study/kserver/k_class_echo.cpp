@@ -82,6 +82,7 @@ public :
 		}
 		serverSocket = socket(PF_INET, SOCK_STREAM, 0);
 		if (serverSocket == -1) { exitWithPerror("socket() error\n" + String(strerror(errno))); }
+
 		memset(&serverAddr, 0, sizeof(serverAddr));
 		serverAddr.sin_family = AF_INET;
 		serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -150,7 +151,7 @@ public :
 					if (currEvent->ident == serverSocket)
 						exitWithPerror("server socket error");
 					else {
-						std::cerr << "clients socket error" << std::endl;
+						CER << "clients socket error" << CEND;
 						disconnectClients(currEvent->ident, clients);
 					}
 				}
@@ -159,7 +160,7 @@ public :
 						/* Accept new client */
 						int clientSocket(accept(serverSocket, NULL, NULL));
 						if (clientSocket == -1) { exitWithPerror("accept() error\n" + String(strerror(errno))); }
-						std::cout << "accept new client : " << clientSocket << std::endl;
+						COUT << "accept new client : " << clientSocket << CEND;
 						fcntl(clientSocket, F_SETFL, O_NONBLOCK);
 
 						/* add event for client socket - add read && write event */
@@ -172,13 +173,13 @@ public :
 						char buf[1024];
 						int n = recv(currEvent->ident, buf, sizeof(buf), 0);
 						if (n <= 0) {
-							if (n < 0) { std::cerr << "client read error!" << std::endl; }
+							if (n < 0) { CER << "client read error!" << CEND; }
 							disconnectClients(currEvent->ident, clients);
 						}
 						else {
 							buf[n] = '\0';
 							clients[currEvent->ident].append(buf);
-							std::cout << "received data from " << currEvent->ident << ":\n" << clients[currEvent->ident] << std::endl;
+							COUT << "received data from " << currEvent->ident << ":\n" << clients[currEvent->ident] << CEND;
 						}
 					}
 				}
