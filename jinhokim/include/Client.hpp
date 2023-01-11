@@ -9,22 +9,20 @@
 # include <arpa/inet.h>
 # include <netdb.h>
 
-class Client
-{
+class Client {
     public:
         Client(int port);
         virtual ~Client(void);
 
-        int set(void);
-        int run(void);
+        int	Set(void);
+        int	Run(void);
     private:
-        const int           port_;
-        int                 client_fd_;
-        hostent*            server_;
-        sockaddr_in         server_address_;
-        std::string         response_;
+        const int	port_;
+        int			client_fd_;
+        sockaddr_in	server_address_;
+        std::string	response_;
 };
 
-int printError(const std::string str);
+int PrintError(const std::string str);
 
 #endif  // CLIENT_HPP
