@@ -133,26 +133,24 @@ int Server::Run(void) {
                         std::cout << "request from " << GetIp() << ": " << buf << std::endl;
 
                     	// response 보내기
-						std::map<int, std::string>::iterator it = clients.find(curr_event->ident);
-						if (it != clients.end()) {
-							if (clients[curr_event->ident] != "") {
-                                Http http(buf);
-                                http.HttpHandler();
-                                std::string response = http.GetHeader();
-								ssize_t bytes_sent = send(curr_event->ident, response.c_str(), response.size(), 0);
-								// if (bytes_sent < 0)
-								// 	std::cerr << "Failed to send data to client" << std::endl;
-								// else
-								// clients[curr_event->ident].clear();
-								clients[curr_event->ident].clear();
-                                ChangeEvents(change_list, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-                                std::string html_str = http.GetHtml();
-                                std::cout << html_str << std::endl;
-								bytes_sent = send(curr_event->ident, html_str.c_str(), html_str.size(), 0);
-								clients[curr_event->ident].clear();
-							}
-						}
-					}
+                        // Http http(buf);
+                        // http.HttpHandler();
+                        // std::string response = http.GetHeader();
+                        // ssize_t bytes_sent = send(curr_event->ident, response.c_str(), response.size(), 0);
+                        // if (bytes_sent < 0)
+                        // 	std::cerr << "Failed to send data to client" << std::endl;
+                        // else
+                        //     clients[curr_event->ident].clear();
+                        // std::string html_str = http.GetHtml(curr_event->ident);
+                        // std::cout << html_str << std::endl;
+                        //send(curr_event->ident, html_str.c_str(), html_str.size(), 0);
+                        buf[0] = '\0';
+                        int f = open("./index.html", O_RDONLY);
+                        int r;
+                        while ((r = read(f, buf, BUFSIZE)) > 0)
+                            send(curr_event->ident, buf, r, 0);
+                        clients[curr_event->ident].clear();
+                    }
 				}
             }
         }

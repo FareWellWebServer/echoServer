@@ -23,7 +23,7 @@ class Http {
 		void    FindMime(char* ct_type, char* uri);
 		void    HttpHandler(void);
 
-		std::string	GetHtml(void) const;
+		std::string	GetHtml(int socket) const;
 		std::string	GetHeader(void) const;
 	private:
         std::string	request_;

@@ -73,27 +73,15 @@ void    Http::HttpHandler(void) {
     FillHeader(ct_len, ct_type);
 }
 
-std::string	Http::GetHtml(void) const {
+std::string	Http::GetHtml(int socket) const {
     if (status_ == 200) {
-        // char buf[BUFSIZE];
-        // int r;
-        // std::string res;
-        // while ((r = read(fd_, buf, BUFSIZE)) > 0) {
-        //     res.append(buf);
-        //     res.append("\n");
-        // }
-        // res.pop_back();
-        std::string res("<!doctype html>\n\
-    <html>\n\
-    <head>\n\
-        <title>Test Page</title>\n\
-    </head>\n\
-    <body>\n\
-        <p>\n\
-            <strong>Webserv...</strong>\n\
-        </p>\n\
-    </body>\n\
-</html>");
+        char buf[BUFSIZE];
+        int r;
+        std::string res;
+        while ((r = read(fd_, buf, BUFSIZE)) > 0) {
+            write(socket, buf, r);
+            res.append(buf);
+        }
         return res;
     }
     else if (status_ == 404)
