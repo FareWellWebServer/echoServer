@@ -18,14 +18,6 @@ void exit_with_perror(const string& msg)
     exit(EXIT_FAILURE);
 }
 
-
-void disconnect_client(int client_fd, map<int, string>& clients)
-{
-    cout << "client disconnected: " << client_fd << endl;
-    close(client_fd);
-    clients.erase(client_fd);
-}
-
 void change_events(vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
         uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
 {
@@ -33,6 +25,13 @@ void change_events(vector<struct kevent>& change_list, uintptr_t ident, int16_t 
 
     EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
     change_list.push_back(temp_event);
+}
+
+void disconnect_client(int client_fd, map<int, string>& clients)
+{
+    cout << "client disconnected: " << client_fd << endl;
+    close(client_fd);
+    clients.erase(client_fd);
 }
 
 int main()
@@ -50,7 +49,7 @@ int main()
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(8080);
     //생성된 소켓에 ip주소와 port 번호 binding.
-    if (bind(server_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)) < 0)
+    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
         exit_with_perror("bind() error\n" + string(strerror(errno)));
 
     //통신 할 준비가 되어있음. 듣기 시작.
@@ -65,6 +64,9 @@ int main()
     if ((kq = kqueue()) == -1)
         exit_with_perror("kqueue() error\n" + string(strerror(errno)));
 
+
+
+
     /*
     int kevent(int kq, const struct kevent *changelist, int nchanges, struct kevent *eventlist, int nevents, const struct timespec *timeout);
     - kq로 전달된 kqueue에 새로 모니터링할 이벤트를 등록하고, 발생하여 아직 처리되지 않은(pending 상태인) 이벤트의 개수를 return한다. 
@@ -72,7 +74,7 @@ int main()
     <kevent 구조체>
         struct kevent {
             uintptr_t ident;         identifier for this event 
-            int16_t   filter;        filter for event //작동 시 이 이벤트가 발생하면 이 값을 반환하겠다는 말.
+            int16_t   filter;        filter for event 
             uint16_t  flags;         action flags for kqueue 
             uint32_t  fflags;        filter flag value 
             intptr_t  data;          filter data value 
@@ -88,8 +90,8 @@ int main()
     <int nevents>
         발생 한 event가 return 될 배열의 개수
     <const struct timespec *timeout>
+    
     */
-   
     map<int, string> clients; // map for client socket:data
     vector<struct kevent> change_list; // kevent vector for changelist
     struct kevent event_list[8]; // kevent array for eventlist
@@ -104,8 +106,6 @@ int main()
     while (1)
     {
         /*  apply changes and return new events(pending events) */
-        // 이벤트 발생 -> 커넥션? 어떤게 발생하는지 모르겠지만 발생한것만 말해주니까 커널딴으로 파고들거 아니면 가볍게 생각하자
-        
         new_events = kevent(kq, &change_list[0], change_list.size(), event_list, 8, NULL);
         if (new_events == -1)
             exit_with_perror("kevent() error\n" + string(strerror(errno)));
