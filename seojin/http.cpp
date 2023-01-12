@@ -11,7 +11,8 @@ void doit(int fd)
 	char method[MAXLINE];
 	char uri[MAXLINE];
 	char version[MAXLINE];
-	char filename[MAXLINE], cgiargs[MAXLINE];
+	char filename[MAXLINE];
+	char cgiargs[MAXLINE];
 	rio_t rio;
 
 	/* Read request line and headers */

@@ -17,8 +17,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#define MAXLINE 1000000
-#define MAXBUF 1000000
+#define MAXLINE 10000
+#define MAXBUF 10000
 #define MAXLISTEN 10
 #define BACKLOG 128
 #define DISABLE 0
@@ -45,6 +45,7 @@ struct Node
 	int			status;
 };
 
+
 class Server
 {
 
@@ -56,16 +57,11 @@ private:
 
 
 	void			Echo( int connfd );
-	void			DeleteClientNode(const std::string& host, \
-							const std::string& port, \
-							int fd);
+	void			DeleteClientNode(const std::string& host, const std::string& port, int fd);
 	void			ClearServerNode( void );
 	void			ClearClientNode( void );
 	bool			IsListenFd( int fd );
-	struct Node*	NewNode(const std::string& host, \
-							const std::string& port, \
-							int fd, \
-							int status);
+	struct Node*	NewNode(const std::string& host, const std::string& port, int fd, int status);
 
 public:
 	void	Listen( const std::string& host, const std::string& port );

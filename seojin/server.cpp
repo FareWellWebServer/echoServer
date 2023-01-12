@@ -45,25 +45,23 @@ void Server::Echo( int connfd )
 		std::cout << "Server received " << n << " bytes\n";
 		std::cout << buf;
 		buf[n] = '\0';
-		send(connfd, buf, n, 0);
-		sleep(3);
+		// send(connfd, buf, n, 0);
 		return ;
 	}
 }
 void Server::DeleteClientNode( const std::string& host, const std::string& port, int fd )
 {
 	std::set<struct Node*>::iterator it = clients_.begin();
-
+	// std::cout << host << "\n" << port << "\n" << fd << "\n";
 	for(; it != clients_.end(); ++it)
 	{
-		if ((*it)->host == host && \
-			(*it)->port == port && \
-			(*it)->fd == fd)
+		// std::cout << (*it)->host << "\n" << (*it)->port << "\n" << (*it)->fd << "\n";
+		if ((*it)->fd == fd)
 		{
 			close((*it)->fd);
+			std::cout << "Disconnected to (" << (*it)->host << ", " << (*it)->port << ")\n";
 			delete(*it);
 			clients_.erase(*it);
-			std::cout << "Disconnected to (" << host << ", " << port << ")\n";
 			return;
 		}
 	}
@@ -112,7 +110,7 @@ void Server::ClearClientNode( void )
 
 
 /* public functions */
-void Server::Listen(const std::string& host, const std::string& port)
+void Server::Listen( const std::string& host, const std::string& port )
 {
 	if (server_.size() == MAXLISTEN)
 	{
@@ -207,10 +205,27 @@ void Server::Listen(const std::string& host, const std::string& port)
 		return;
 	}
 
+	// Set the new client socket to non-blocking mode
+	int flags = fcntl(listenfd, F_GETFL, 0);
+	if (flags == -1)
+	{
+		close(listenfd);
+		std::cerr << "Error: fcntl()\n";
+		return;
+	}
+	flags |= O_NONBLOCK;
+	if (fcntl(listenfd, F_SETFL, flags) == -1)
+	{
+		close(listenfd);
+		std::cerr << "Error: fcntl()\n";
+		return;
+	}
+
 	struct kevent event;
 
 	EV_SET(&event, listenfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+		close(listenfd);
         std::cerr << "Error: kevent()\n";
         return;
     }
@@ -218,6 +233,7 @@ void Server::Listen(const std::string& host, const std::string& port)
 	server_.insert(NewNode(host, port, listenfd, status));
 	std::cout << host << " is listening port on " << port << "\n";
 }
+
 void Server::Run( void )
 {
 	if (server_.size() == 0)
@@ -239,6 +255,7 @@ void Server::Run( void )
 	while (true)
 	{
 		int n = kevent(kq_, NULL, 0, events_, MAXLISTEN, NULL);
+		// std::cout << "return value of kevent:" << n << "\n";
         if (n == -1) {
             std::cerr << "Error: kevent()\n";
             return;
@@ -261,16 +278,16 @@ void Server::Run( void )
 				else
 				{
                     // Set the new client socket to non-blocking mode
-                    // flags = fcntl(connfd, F_GETFL, 0);
-                    // if (flags == -1) {
-                    //     std::cerr << "Error: fcntl()\n";
-                    //     continue;
-                    // }
-                    // flags |= O_NONBLOCK;
-                    // if (fcntl(connfd, F_SETFL, flags) == -1) {
-                    //     std::cerr << "Error: fcntl()\n";
-                    //     continue;
-                    // }
+                    flags = fcntl(connfd, F_GETFL, 0);
+                    if (flags == -1) {
+                        std::cerr << "Error: fcntl()\n";
+                        continue;
+                    }
+                    flags |= O_NONBLOCK;
+                    if (fcntl(connfd, F_SETFL, flags) == -1) {
+                        std::cerr << "Error: fcntl()\n";
+                        continue;
+                    }
 
                     // Set up a kevent to monitor the client socket for read events
                     EV_SET(&event, connfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
@@ -289,6 +306,14 @@ void Server::Run( void )
                         std::cerr << "Error: kevent()\n";
                         continue;
                     }
+
+					EV_SET(&event, connfd, EVFILT_TIMER, EV_ADD, 0, 2000, NULL);
+
+                    // Register the kevent with the kernel event queue
+                    if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) {
+                        std::cerr << "Error: kevent()\n";
+                        continue;
+                    }
                 }
 				getnameinfo(reinterpret_cast<struct sockaddr *>(&client_addr), client_len,\
 							host, MAXBUF,\
@@ -296,16 +321,35 @@ void Server::Run( void )
 							0);
 
 				clients_.insert(NewNode(host, port, connfd, 0));
-				std::cout << "Connected to (" << host << ", " << port << ")\n";
+				std::cout << "Connected to (" << host << ", " << port << ", " << connfd <<")\n";
             }
 			else if (events_[idx].filter == EVFILT_READ)
 			{
+				std::cout << "Received request from (fd: " << events_[idx].ident << ")\n";
 				EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
-				Echo(events_[idx].ident);
-				// http::doit(events_[idx].ident);
+
+				EV_SET(&event, events_[idx].ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
+
+				EV_SET(&event, events_[idx].ident, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
+
+				http::doit(events_[idx].ident);
 				DeleteClientNode(host, port, events_[idx].ident);
-				// close(events_[idx].ident);
+			}
+			else if (events_[idx].filter == EVFILT_TIMER)
+			{
+				std::cout << "Time out (fd: " << events_[idx].ident << ")\n";
+				EV_SET(&event, events_[idx].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
+
+				EV_SET(&event, events_[idx].ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
+
+				EV_SET(&event, events_[idx].ident, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+				if (kevent(kq_, &event, 1, NULL, 0, NULL) == -1) std::cerr << "Error: kevent()\n";
+				DeleteClientNode(host, port, events_[idx].ident);
 			}
 		}
 	}
@@ -317,16 +361,16 @@ int main(int ac, char* av[])
 {
 	Server server;
 
-	std::string host("127.0.0.1");
-	std::string port("8080");
+	server.Listen("127.0.0.1", "8080");
+	server.Listen("127.0.0.1", "8081");
+	server.Listen("127.0.0.1", "8082");
+	server.Listen("10.19.208.43", "8080");
 
-	server.Listen(host, port);
+	// port = "4242";
+	// server.Listen(host, port);
 
-	port = "4242";
-	server.Listen(host, port);
-
-	port = "4244";
-	server.Listen(host, port);
+	// port = "4244";
+	// server.Listen(host, port);
 
 	server.Run();
 
