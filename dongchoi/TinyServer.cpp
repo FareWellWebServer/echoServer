@@ -87,12 +87,13 @@ void TinyServer::Action() {
 		int client_fd = event_trigger[i].ident;
 		read(client_fd, buffer, rdwr_buf_size_);
 		// GetRequest(client_fd);
-		if (strncmp(buffer, "GET ", 4))
-		{
-			int request_fd = open("./index.html", O_RDONLY);
-			int read_cnt = read(request_fd, buffer, rdwr_buf_size_);
-			write(client_fd, buffer, read_cnt);
-		}
+		int request_fd(0);
+		if (!strncmp(buffer, "GET", 3))
+			request_fd = open("./index.html", O_RDONLY);
+		else
+			request_fd = open("./error.html", O_RDONLY);
+		int read_cnt = read(request_fd, buffer, rdwr_buf_size_);
+		write(client_fd, buffer, read_cnt);
 		// ProcessRequest();
 		// SendResponse();
 	}
