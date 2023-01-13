@@ -1,5 +1,7 @@
 #include "TinyServer.hpp"
-
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
 
 TinyServer::TinyServer(const char* port)
 {
@@ -83,7 +85,14 @@ void TinyServer::Action() {
 		}
 		// already connection
 		int client_fd = event_trigger[i].ident;
-		// GetRequest();
+		read(client_fd, buffer, rdwr_buf_size_);
+		// GetRequest(client_fd);
+		if (strncmp(buffer, "GET ", 4))
+		{
+			int request_fd = open("./index.html", O_RDONLY);
+			int read_cnt = read(request_fd, buffer, rdwr_buf_size_);
+			write(client_fd, buffer, read_cnt);
+		}
 		// ProcessRequest();
 		// SendResponse();
 	}
@@ -91,5 +100,40 @@ void TinyServer::Action() {
 void TinyServer::run() {
 	Bind();
 	Listen();
-	Action();
+	while(1)
+		Action();
 }
+
+
+/*-------------------------------------------------------------------*/
+
+// #include <fstream>
+// #include <string.h>
+// #include <fcntl.h>
+// #include <unistd.h>
+
+// const char *write_file_name_temp;
+
+// void GetRequest(int client_fd)
+// {
+// 	std::string file_name("request_http_header");
+// 	file_name.append(std::to_string(client_fd)); // C++11
+// 	write_file_name_temp = file_name.c_str();
+// 	int write_file_fd = open(file_name.c_str(), O_WRONLY | O_CREAT);
+// 	if (write_file_fd == -1)
+// 		throw std::runtime_error("GetRequest : write file open error");
+// 	char buf[1024];
+// 	while(read(client_fd, buf, 1024))
+// 		write(write_file_fd, buf, 1024);
+	
+// }
+
+// void ProcessRequest()
+// {
+	
+// }
+
+// void SendResponse()
+// {
+	
+// }
