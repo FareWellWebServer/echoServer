@@ -5,9 +5,23 @@
 		<title>My first three.js app</title>
 		<style>
 			body { margin: 0; }
+			#info {
+				position: absolute;
+				text-align: center;
+				margin-top: 42px;
+				font-size: 100px ;
+				margin-left: auto;
+				margin-right: auto;
+				left: 0;
+				right: 0;
+				z-index: 100;
+			    color:aliceblue;
+				background-color:transparent;
+			}
 		</style>
 	</head>
 	<body>
+		<h1 id="info">404 Page not found</h1>
 		<script src="js/three.js"></script>
 		<script>
 			const scene = new THREE.Scene();
