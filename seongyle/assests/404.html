@@ -37,10 +37,18 @@
 			
             let mouseX = 0;
             let mouseY = 0;
-			const mouse = document.querySelector(".mouse");
-			document.addEventListener("mousemove", (e) => { 
-			mouseX = e.clientX - window.innerWidth / 2;
-			mouseY = e.clientY - window.innerHeight / 2;
+			let gyroX = 0;
+			let gyroY = 0;
+			
+			window.addEventListener('deviceorientation', handleOrientation);
+
+			document.addEventListener("click", gyroSensorPermission, { once : true });
+			document.addEventListener("mousemove", (e) => {
+				const isMobile = /Mobi/i.test(window.navigator.userAgent);
+				if (isMobile)
+					return ;
+				mouseX = e.clientX - window.innerWidth / 2;
+				mouseY = e.clientY - window.innerHeight / 2;
 			});
 			
 			const scene = new THREE.Scene();
@@ -73,18 +81,23 @@
 			const particleMaterial = new THREE.PointsMaterial( { size: 5, sizeAttenuation: true, alphaTest: 0.8, transparent: true } );
 			particleMaterial.color.setRGB( 0.78, 0.78, 0.6);
 			const particles = new THREE.Points( particleGeometry, particleMaterial );
-
 			
 			scene.add( internet_sphere );
 			scene.add( line );
 			scene.add( particles );
 
 			camera.position.z = 3;
+			
+			animate();
 
+			//** functions **//
 			function animate() {
 				requestAnimationFrame( animate );
 				camera.position.x += (mouseX - camera.position.x) * 0.05;
 				camera.position.y += (mouseY - camera.position.y) * 0.05;
+				camera.position.x += (gyroX / 180);
+				camera.position.y += (gyroY / 180);
+
 				camera.lookAt( scene.position );
 
 				internet_sphere.rotation.x += 0.01;
@@ -92,7 +105,22 @@
 
 				renderer.render( scene, camera );
 			};
-			animate();
+
+			function handleOrientation(e) {
+				gyroX = e.beta;
+				gyroY = e.gamma;
+			}
+
+			function gyroSensorPermission() {
+				if (typeof DeviceMotionEvent.requestPermission === 'function') {
+					// Handle iOS 13+ devices.
+					DeviceMotionEvent.requestPermission()
+					.then((state) => {
+						if (state !== 'granted') {
+						console.error('Request to access the orientation was rejected');
+						}
+					})
+			}}
 		</script>
 	</body>
 </html>
