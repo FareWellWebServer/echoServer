@@ -1,10 +1,249 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Test Page</title>
-    </head>
-    <body>
-        <p>
-            <strong>Webserv...</strong>
-        </p>
-    </body>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Jua&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>진호의 실험실</title>
+    <meta name="title" content="진호의 실험실">
+    <meta name="subject" content="강아지 고양이 분류기!">
+    <meta name="keywords" content="강아지, 멍멍이, 댕댕이, 고양이, 냥이, 인공지능 강아지 고양이 분류기">
+    <meta name="description" content="진호의 실험실 공부겸 만들어본 강아지 고양이 분류기입니다! 사진 데이터는 그 어디에도 전송되지 않습니다. ">
+    <meta name="author" content="김진호">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="canonical" href="https://kimjinho1.github.io/JinhoLab/" />
+    <meta property="og:url" content="https://kimjinho1.github.io/JinhoLab/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="강아지 고양이 분류기" />
+    <meta property="og:description" content="공부겸 만들어본 강아지 고양이 분류기입니다! 사진 데이터는 그 어디에도 전송되지 않습니다. " />
+    <meta property="og:image" content="http://www.animaltogether.com/news/photo/201907/132_632_3752.jpg" />
+    <link rel="shortcut icon" href="./img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <meta name="naver-site-verification" content="385e99c89bf2ab937c0ef0748f6182800517a6d7" />
+</head>
+
+<body>
+    <nav class="p-3 container navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="index.html">진호의 실험실</a>
+        <ul class="navbar-nav">
+            <li class="nav-item active dog_cat">
+                <a class="nav-link" href="dog-cat.html">강아지 고양이 분류기</a>
+            </li>
+            <li class="nav-item active update">
+                <a class="nav-link" href="animal-face.html">동물상 테스트</a>
+            </li>
+        </ul>
+    </nav>
+
+    <section class="section">
+        <h1 class="title">강아지 고양이 분류기</h1>
+        <h2 class="subtitle">웹 공부하는 겸 만들어본 사이트!</h2>
+        <h2 class="sr-only">나는 어떤 동물과 닮았을까? 나의 동물상 찾기를 해보세요!</h2>
+        <h3 class="sr-only">대표 동물상 연예인 사진 데이터로 학습한 인공지능이 나의 얼굴로 동물상과 특징을 찾아드립니다.</h3>
+        <h4 class="sr-only">본 서비스는 Google의 인공지능 teachable machine 2.0을 활용하였습니다.</h4>
+        <p class="sr-only">얼굴로 보는 인공지능 동물상 테스트, 나와 닮은 동물상을 찾아보세요! 대표 동물상 연예인 사진 데이터로 학습한 인공지능이 나의 얼굴로 동물상과 특징을 찾아드립니다. 회원가입도 필요없이 화면에서 바로 확인해보세요! 사진 데이터는 그 어디에도 전송되지 않습니다. 인공지능이 보는 나의 동물상 테스트 한번 해보세요! 강아지상? 고양이상? 여우상? 사슴상? 토끼상? 곰상? 공룡상? 얼굴상 테스트를 통해 나와 닮은 동물 찾기를 할 수 있습니다.</p>
+    </section>
+
+    <h3 class="pb-2 d-flex justify-content-center">강아지와 고양이 중 더 좋아하는 동물의 사진을 올려보세요!</h3>
+
+    <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <div class="mt-3 container file-upload">
+        <div class="image-upload-wrap">
+            <input class="file-upload-input" type='file' onchange="readURL(this);" accept="image/*" />
+            <div class="drag-text">
+                <img src="img/upload.svg" class="mt-5 pt-5 upload">
+                <h3 class="mb-5 pb-5 pt-4  upload-text">강아지, 고양이 사진을 올려놓거나 눌러서 업로드하세요!</h3>
+            </div>
+        </div>
+        <div class="file-upload-content">
+            <img class="file-upload-image" id="cat-dot-image" src="#" alt="your image" />
+            <div id="loading" class="animated bounce">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="text-center">AI가 당신의 사진을 분류 중입니다.</p>
+            </div>
+            <p class="result-message"></p>
+            <div id="label-container" class="d-flex flex-column justify-content-around"></div>
+            <div id="addThis" class="addthis_inline_share_toolbox_6lz1"></div>
+
+            <div class="pt-3 image-title-wrap">
+                <button type="button p-2" class="try-again-btn" onclick="window.location.reload();">
+                    <span class="try-again-text">다른 사진으로 재시도</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid text-center bottom-container">
+        <footer>
+            <br>
+            <table class="footer_table" align="center">
+
+                <tr>
+                    <td class="footer-txt">ABOUT</td>
+                    <td class="footer-txt">CONTACT</td>
+                    <td class="footer-txt">ADDRESS</td>
+                </tr>
+
+                <tr>
+                    <td><img class="footer-logo" src="./img/github-logo.png" onclick="location.href='https://github.com/kimjinho1/'">
+                    </td>
+                    <td>Jinho Kim</td>
+                    <td>Korea</td>
+                </tr>
+
+                <tr>
+                    <td><img class="footer-logo" src="./img/linkedin-logo.png" onclick="location.href='https://www.linkedin.com/in/jinho-kim-a08452191/'"></td>
+                    <td class="email">dlfhgk62@gmail.com</td>
+                    <td>Seoul</td>
+                </tr>
+
+                <tr>
+                    <td>&nbsp</td>
+                </tr>
+
+                <tr>
+                    <td class="copy" colspan="3">
+                        <p>&copy; 진호 JinhoKim 2020. All Rights Reserved. </p>
+                    </td>
+                </tr>
+
+            </table>
+        </footer>
+    </div>
+
+    <script>
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('.image-upload-wrap').hide();
+                    $('#loading').show();
+                    $('.file-upload-image').attr('src', e.target.result);
+                    $('.file-upload-content').show();
+                    $('.image-title').html(input.files[0].name);
+                };
+                reader.readAsDataURL(input.files[0]);
+                init().then(function() {
+                    console.log("hello");
+                    predict();
+                    $('#loading').hide();
+                });
+            } else {
+                removeUpload();
+            }
+        }
+
+        function removeUpload() {
+            $('.file-upload-input').replaceWith($('.file-upload-input').clone());
+            $('.file-upload-content').hide();
+            $('.image-upload-wrap').show();
+        }
+        $('.image-upload-wrap').bind('dragover', function() {
+            $('.image-upload-wrap').addClass('image-dropping');
+        });
+        $('.image-upload-wrap').bind('dragleave', function() {
+            $('.image-upload-wrap').removeClass('image-dropping');
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        const URL = "https://teachablemachine.withgoogle.com/models/zWQBPJzys/";
+        let model, webcam, labelContainer, maxPredictions;
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) {
+                var element = document.createElement("div")
+                element.classList.add("d-flex");
+                labelContainer.appendChild(element);
+            }
+        }
+
+        async function predict() {
+            var image = document.getElementById("cat-dot-image")
+            const prediction = await model.predict(image, false);
+            prediction.sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
+            console.log(prediction[0].className);
+            var resultTitle, resultExplain;
+            switch (prediction[0].className) {
+                case "Dog":
+                    resultTitle = "귀여운 강아지!"
+                    resultExplain = "당신은 강아지를 좋아하시는군요! 전 고양이를 조금 더 좋아합니다ㅎㅎ"
+                    break;
+                case "Cat":
+                    resultTitle = "귀여운 고양이!"
+                    resultExplain = "당신은 고양이를 좋아하시는군요! 저도 고양이를 정말 좋아합니다ㅎㅎ"
+                    break;
+                case "Else":
+                    resultTitle = "강아지와 고양이 둘 다 아니에요!"
+                    resultExplain = "혹시 동물을 싫어하시나요? 강아지와 또는 고양이의 사진을 넣어주세요!"
+                    break;
+                default:
+                    resultTitle = "알수없음"
+                    resultExplain = ""
+            }
+            var title = "<div class='" + prediction[0].className + "-animal-title'>" + resultTitle + "</div>"
+            var explain = "<div class='animal-explain pt-2'>" + resultExplain + "</div>"
+            $('.result-message').html(title + explain);
+            var barWidth;
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability.toFixed(2) > 0.1) {
+                    barWidth = Math.round(prediction[i].probability.toFixed(2) * 100) + "%";
+                } else if (prediction[i].probability.toFixed(2) >= 0.01) {
+                    barWidth = "4%"
+                } else {
+                    barWidth = "2%"
+                }
+                var labelTitle;
+                switch (prediction[i].className) {
+                    case "Dog":
+                        labelTitle = "강아지"
+                        break;
+                    case "Cat":
+                        labelTitle = "고양이"
+                        break;
+                    case "Else":
+                        labelTitle = "둘 다 없어요!"
+                        break;
+                    default:
+                        labelTitle = "알수없음"
+                }
+                var label = "<div class='animal-label d-flex align-items-center'>" + labelTitle + "</div>"
+                var bar = "<div class='bar-container position-relative container'><div class='" + prediction[i].className + "-box'></div><div class='d-flex justify-content-center align-items-center " + prediction[i].className + "-bar' style='width: " + barWidth + "'><span class='d-block percent-text'>" + Math.round(prediction[i].probability.toFixed(2) * 100) + "%</span></div></div>"
+                labelContainer.childNodes[i].innerHTML = label + bar;
+            }
+        }
+    </script>
+
+</body>
+<!-- 
+image input box
+Copyright (c) 2020 by Aaron Vanston (https://codepen.io/aaronvanston/pen/yNYOXR)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+gender toggle
+Copyright (c) 2020 by Mert Cukuren (https://codepen.io/knyttneve/pen/bPpEZY)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
+
 </html>

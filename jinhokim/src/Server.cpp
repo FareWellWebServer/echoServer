@@ -24,7 +24,7 @@ EX)
 8. 커낵션을 닫는다(close)
 */
 
-#include "../include/Server.hpp"
+#include "Server.hpp"
 
 Server::Server(int port) : port_(port) {}
 
@@ -134,16 +134,15 @@ int Server::Run(void) {
                         std::map<int, std::string>::iterator it = clients.find(curr_event->ident);
                         if (it != clients.end()) {
                             if (clients[curr_event->ident] != "") {
-                                Http http(buf);
-                                http.HttpHandler();
-                                std::string html_str = http.GetHtml();
-                                std::cout << "response: " << html_str << std::endl;
-                                send(curr_event->ident, html_str.c_str(), html_str.size(), 0); 
+                                Response response(buf);
+                                response.ResponseHandler();
+                                std::string response_str = response.GetResponse();
+                                std::cout << "response: " << response_str << std::endl;
+                                send(curr_event->ident, response_str.c_str(), response_str.size(), 0); 
                             }
                             //DisconnectClient(curr_event->ident, clients);
                             //clients[curr_event->ident].clear();
                         }
-
                     }
 				}
             }
