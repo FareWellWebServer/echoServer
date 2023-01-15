@@ -12,7 +12,7 @@
 # include <unistd.h>
 
 # define BUFSIZE 				1024
-# define HEADER_FORMAT  		"HTTP/1.1 %d %s\r\nContent-Length: %ld\nContent-Type: %s\r\n"
+# define HEADER_FORMAT  		"HTTP/1.1 %d %s\r\nContent-Length: %ld\nContent-Type: %s\r\n\r\n"
 # define NOT_FOUND_CONTENT 		"<h1>404 Not Found</h1>\n"
 # define SERVER_ERROR_CONTENT 	"<h1>500 Internal Server Error</h1>\n"
 

@@ -137,7 +137,6 @@ int Server::Run(void) {
                                 Response response(buf);
                                 response.ResponseHandler();
                                 std::string response_str = response.GetResponse();
-                                std::cout << "response: " << response_str << std::endl;
                                 send(curr_event->ident, response_str.c_str(), response_str.size(), 0); 
                             }
                             //DisconnectClient(curr_event->ident, clients);
