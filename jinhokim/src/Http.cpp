@@ -71,23 +71,26 @@ void    Http::HttpHandler(void) {
     FindMime(ct_type, local_uri);
     status_ = 200;
     FillHeader(ct_len, ct_type);
+    header_.append("\r\n");
 }
 
-std::string	Http::GetHtml(int socket) const {
+std::string	Http::GetHtml(void){
     if (status_ == 200) {
         char buf[BUFSIZE];
         int r;
-        std::string res;
-        while ((r = read(fd_, buf, BUFSIZE)) > 0) {
-            write(socket, buf, r);
-            res.append(buf);
-        }
-        return res;
+        while ((r = read(fd_, buf, BUFSIZE)) > 0)
+            header_.append(buf);
+        return header_;
     }
-    else if (status_ == 404)
-        return std::string(NOT_FOUND_CONTENT);
+    else if (status_ == 404) {
+        header_.append("\r\n");
+        header_.append(NOT_FOUND_CONTENT);
+        return header_;
+    }
     else if (status_ == 500)
-        return std::string(SERVER_ERROR_CONTENT);
+        header_.append("\r\n");
+        header_.append(SERVER_ERROR_CONTENT);
+        return header_;
     return std::string("Error");
 }
 
