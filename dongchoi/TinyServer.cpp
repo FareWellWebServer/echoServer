@@ -84,7 +84,7 @@ void TinyServer::Action() {
 			continue;
 		}
 		// already connection
-		int client_fd = event_trigger[i].ident;
+		const int client_fd = event_trigger[i].ident;
 		read(client_fd, buffer, rdwr_buf_size_);
 		// GetRequest(client_fd);
 		int request_fd(0);
