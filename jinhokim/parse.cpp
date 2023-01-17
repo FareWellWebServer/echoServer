@@ -1,6 +1,9 @@
 #include <iostream>
 
+void a(void) { system("leaks a.out"); }
+
 int main(void) {
+  atexit(a);
   std::string request_("GET / Moved Permanently");
 
   std::size_t method_end_idx = request_.find_first_of(" ");
@@ -13,4 +16,5 @@ int main(void) {
 
   std::cout << "[INFO] Request: method=" << method << ", URI=" << uri
             << std::endl;
+  const char* s = method.c_str();
 }

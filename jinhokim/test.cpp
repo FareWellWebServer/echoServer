@@ -103,7 +103,7 @@ void http_handler(int asock) {
   struct stat st;
 
   strcpy(safe_uri, uri);
-  if (!strcmp(safe_uri, "/")) strcpy(safe_uri, "/index2.html");
+  if (!strcmp(safe_uri, "/")) strcpy(safe_uri, "/index.html");
 
   local_uri = safe_uri + 1;
   if (stat(local_uri, &st) < 0) {
