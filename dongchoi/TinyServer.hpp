@@ -13,21 +13,21 @@
 
 class TinyServer {
 	public:
-		TinyServer(const char* port);
+		TinyServer(char** port, int portCount);
 		~TinyServer();
 		void run();
 
 	private:
-		int listen_fd_;
-		struct addrinfo *listen_addr_;
+		std::vector<int> listen_fd_;
+		std::vector<struct addrinfo *> listen_addr_;
 		int kq_;
 		struct kevent event_setting_;
 		std::vector<int> clients_fd_;
 		const static int listen_backlog_cnt_ = 10;
 		const static int rdwr_buf_size_ = 1024;
 		void Listen();
-		void Bind();
-		void Accept();
+		void Bind(int listen_fd, const struct sockaddr *ai_addr, socklen_t ai_addrlen);
+		void Accept(int listen_fd);
 		void Action();
 };
 
