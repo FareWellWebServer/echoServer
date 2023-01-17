@@ -67,7 +67,7 @@ int Server::Set(void) {
   if (bind_result < 0)
     throw std::runtime_error("Failed to bind socket to address");
 
-  int listen_result = listen(server_fd_, BACKLOG);
+  int listen_result = listen(server_fd_, 1024);
   if (listen_result < 0) throw std::runtime_error("Failed to listen on socket");
 
   return 0;
@@ -115,8 +115,9 @@ int Server::Run(void) {
 
           ChangeEvents(change_list, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE,
                        0, 0, NULL);
-          ChangeEvents(change_list, client_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE,
-                       0, 0, NULL);
+          // ChangeEvents(change_list, client_fd, EVFILT_WRITE, EV_ADD |
+          // EV_ENABLE,
+          //              0, 0, NULL);
           clients[client_fd] = "";
         } else if (clients.find(curr_event->ident) != clients.end()) {
           char buf[BUFSIZE];
@@ -128,7 +129,9 @@ int Server::Run(void) {
           } else {
             buf[bytes_received] = '\0';
             clients[curr_event->ident] += buf;
-            std::cout << "request from " << GetIp() << ": " << buf << std::endl;
+
+            // std::cout << "request from " << GetIp() << ": " << buf <<
+            // std::endl;
 
             std::map<int, std::string>::iterator it =
                 clients.find(curr_event->ident);

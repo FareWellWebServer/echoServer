@@ -49,10 +49,6 @@ $(BUILD_DIR)/%.o : %.cpp | dir_guard
 	@printf "                                                                                                   \r"
 	@printf "$(YELLOW)[WEBSERV] [%02d/%02d] ( %3d %%) Compiling $<\r$(DEF_COLOR)" $(COMPILED_FILES) $(TOTAL_FILES) $(PROGRESS)
 
-# $(BUILD_DIR)/%.d : %.cpp | dir_guard
-#     @$(CXX) -M $< > $@  
-#@$(CXX) $(CXXFLAGS) -I $(INC_DIR) -c $^ -o $@
-
 dir_guard:
 	@mkdir -p $(addprefix $(BUILD_DIR)/, $(SRC_DIR))
 

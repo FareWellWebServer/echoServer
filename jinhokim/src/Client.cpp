@@ -21,7 +21,7 @@ EX)
 7. 커낵션을 닫는다(close)
 */
 
-#include "../include/Client.hpp"
+#include "Client.hpp"
 
 Client::Client(int port) : port_(port) {}
 

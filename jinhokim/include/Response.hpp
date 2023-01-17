@@ -2,15 +2,12 @@
 #define RESPONSE_HPP
 
 #include <fcntl.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <iostream>
 
 #define BUFSIZE 10240
-#define HEADER_FORMAT \
-  "HTTP/1.1 %d %s\r\nContent-Length: %ld\nContent-Type: %s\r\n\r\n"
 
 class Response {
  public:
@@ -18,12 +15,14 @@ class Response {
   ~Response(void);
 
   void ResponseHandler(void);
-  void FindMime(char *ct_type, char *uri);
+  std::string FindMime(std::string uri);
   void FillHeader(int status, long len, std::string type);
-  void Handle200(int ct_len, char *local_uri);
+  void Handle200(int ct_len, const char *local_uri);
   void Handle404(void);
   void Handle500(void);
 
+  void ComposeResponse(int status, const char *status_text, int len,
+                       std::string type);
   std::string GetResponse(void);
 
  private:
