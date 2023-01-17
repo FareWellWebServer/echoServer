@@ -96,7 +96,7 @@ void http_handler(int asock) {
 
     strcpy(safe_uri, uri);
     if (!strcmp(safe_uri, "/"))
-		strcpy(safe_uri, "/index.html");
+		strcpy(safe_uri, "/index2.html");
 
     local_uri = safe_uri + 1;
     if (stat(local_uri, &st) < 0) {

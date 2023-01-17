@@ -36,7 +36,7 @@ std::string	Server::GetIp(void) {
 	return ip + ":" + port;
 }
 
-void    Server::ChangeEvents(std::vector<struct kevent>& change_list, int socket, int16_t filter,
+void	Server::ChangeEvents(std::vector<struct kevent>& change_list, int socket, int16_t filter,
                                 uint16_t flags, uint32_t fflags, intptr_t data, void *udata) {
     struct kevent temp_event;
 
@@ -44,13 +44,13 @@ void    Server::ChangeEvents(std::vector<struct kevent>& change_list, int socket
     change_list.push_back(temp_event);
 }
 
-void    Server::DisconnectClient(int client_fd, std::map<int, std::string>& clients) {
+void	Server::DisconnectClient(int client_fd, std::map<int, std::string>& clients) {
     std::cerr << "Client disconnected" << std::endl;
     close(client_fd);
     clients.erase(client_fd);
 }
 
-int Server::Set(void) {
+int	Server::Set(void) {
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd_ < 0)
         throw std::runtime_error("Failed to create socket");
@@ -150,7 +150,7 @@ int Server::Run(void) {
     return 0;
 }
 
-void CheckArgument(int ac, char** av) {
+void	CheckArgument(int ac, char** av) {
     if (ac < 2)
         throw std::runtime_error("Few argument error");
     for (std::size_t i = 0; av[1][i] != 0; i++) {
@@ -159,7 +159,7 @@ void CheckArgument(int ac, char** av) {
     }
 }
 
-int PrintError(const std::string str) {
+int	PrintError(const std::string str) {
     std::cerr << str << std::endl;
     return 1;
 }	

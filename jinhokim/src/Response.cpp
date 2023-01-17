@@ -4,7 +4,7 @@ Response::Response(char* request) : request_(std::string(request)) {}
 
 Response::~Response(void) {}
 
-void    Response::ResponseHandler(void) {
+void	Response::ResponseHandler(void) {
     if (request_.size() == 0) {
         std::cerr << "[ERROR] Failed to read request" << std::endl;
         Handle500();
@@ -40,8 +40,8 @@ void    Response::ResponseHandler(void) {
     return ;
 }
 
-void    Response::Handle200(int ct_len, char* local_uri) {
-    char ct_type[40900];
+void	Response::Handle200(int ct_len, char* local_uri) {
+    char ct_type[40];
     int r;
     int fd = open(local_uri, O_RDONLY);
     char buf[BUFSIZE];
@@ -52,25 +52,41 @@ void    Response::Handle200(int ct_len, char* local_uri) {
         response_.append(buf);
 }
 
-void    Response::Handle404(void) {
-	std::string t("text/html");
+void	Response::Handle404(void) {
+    char uri[9] = "404.html";
+    struct stat st;
+    char ct_type[40];
+    int r;
+    char buf[BUFSIZE];
+    int fd = open(uri, O_RDONLY);
 
-    FillHeader(404, sizeof(NOT_FOUND_CONTENT), t);
-    response_.append(NOT_FOUND_CONTENT);
+    stat(uri, &st);
+    FindMime(ct_type, uri);
+    FillHeader(404, st.st_size, ct_type);
+    while ((r = read(fd, buf, BUFSIZE)) > 0)
+        response_.append(buf);
 }
 
-void    Response::Handle500(void) {
-	std::string t("text/html");
+void	Response::Handle500(void) {
+    char uri[9] = "500.html";
+    struct stat st;
+    char ct_type[40];
+    int r;
+    char buf[BUFSIZE];
+    int fd = open(uri, O_RDONLY);
 
-    FillHeader(500, sizeof(SERVER_ERROR_CONTENT), t);
-    response_.append(SERVER_ERROR_CONTENT);
+    stat(uri, &st);
+    FindMime(ct_type, uri);
+    FillHeader(500, st.st_size, ct_type);
+    while ((r = read(fd, buf, BUFSIZE)) > 0)
+        response_.append(buf);
 }
 
-void    Response::FindMime(char* ct_type, char* uri) {
+void	Response::FindMime(char* ct_type, char* uri) {
     char *ext = strrchr(uri, '.');
 
     if (!strcmp(ext, ".html"))
-        strcpy(ct_type, "text/html");
+		strcpy(ct_type, "text/html");
     else if (!strcmp(ext, ".jpg") || !strcmp(ext, ".jpeg"))
         strcpy(ct_type, "image/jpeg");
     else if (!strcmp(ext, ".png"))
@@ -82,30 +98,18 @@ void    Response::FindMime(char* ct_type, char* uri) {
     else strcpy(ct_type, "text/plain");
 }
 
-void    Response::FillHeader(int status, long len, std::string type) {
+void	Response::FillHeader(int status, long len, std::string type) {
     char header[BUFSIZE];
     char status_text[42];
-	// std::string status_text;
-	// std::stringstream stream;
-	// std::string status_str;
-	// std::string	len_str;
-	// stream << len;
-	// stream >> len_str;
 
     switch (status) {
         case 200:
-			// stream << 200;
-			// status_text.append("OK");
             strcpy(status_text, "OK");
 			break;
         case 404:
-			// stream << 404;
-			// status_text.append("Not Found");
             strcpy(status_text, "Not Found");
 			break;
         case 500:
-			// stream << 500;
-			// status_text.append("Internal Server Error");
             strcpy(status_text, "Internal Server Error");
 			break;
         default:
@@ -113,7 +117,7 @@ void    Response::FillHeader(int status, long len, std::string type) {
     }
     sprintf(header, HEADER_FORMAT, status, status_text, len, type.c_str());
 	//stream >> status_str;
-	//response_ = "HTTP/1.1" + status_str + " " + status_str + "\r\nContent-Length: " \
+	//response_ = "HTTP/1.1" + status_str + " " + status_text + "\r\nContent-Length: " \
 				//+ len_str + "\nContent-Type: " + type + "\r\n";
     response_ = std::string(header);
 }

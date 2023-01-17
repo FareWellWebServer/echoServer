@@ -31,8 +31,8 @@ CLIENT			:= client
 # Define the rules
 
 all:
-	@$(MAKE) $(SERVER)
-	@$(MAKE) $(CLIENT)
+	@$(MAKE) -j $(SERVER)
+	@$(MAKE) -j $(CLIENT)
 
 $(SERVER) : $(SERVER_OBJS)
 	@$(CXX) $(CXXFLAGS) $^ -o $@
