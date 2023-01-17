@@ -25,66 +25,61 @@ EX)
 
 Client::Client(int port) : port_(port) {}
 
-Client::~Client(void) {
-    close(client_fd_);
+Client::~Client(void) { close(client_fd_); }
+
+int Client::Set(void) {
+  client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+  if (client_fd_ < 0) throw std::runtime_error("Failed to create socket");
+
+  server_address_.sin_family = AF_INET;
+  server_address_.sin_port = htons(port_);
+  server_address_.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+  int connect_result =
+      connect(client_fd_, (sockaddr*)&server_address_, sizeof(server_address_));
+  if (connect_result < 0)
+    throw std::runtime_error("Failed to connect to server");
+
+  std::cout << "Connected to server" << std::endl;
+
+  return 0;
 }
 
-int    Client::Set(void) {
-    client_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_fd_ < 0)
-        throw std::runtime_error("Failed to create socket");
+int Client::Run(void) {
+  char buffer[1024];
 
-    server_address_.sin_family = AF_INET;
-    server_address_.sin_port = htons(port_);
-    server_address_.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    int connect_result = connect(client_fd_, (sockaddr*)&server_address_, \
-                                    sizeof(server_address_));
-    if (connect_result < 0)
-        throw std::runtime_error("Failed to connect to server");
-
-	std::cout << "Connected to server" << std::endl;
-
-    return 0;
-}
-
-int    Client::Run(void) {
-    char buffer[1024];
-
-    while (42) {
-        std::string message;
-        std::getline(std::cin, message);
-        if (std::cin.eof() || !message.compare("exit")) {
-            std::cout << "Client Bye!" << std::endl;
-            break ;
-        }
-
-        ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
-        if (bytes_sent < 0)
-            throw std::runtime_error("Failed to send data to server");
-
-        ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
-        if (bytes_received < 0)
-            throw std::runtime_error("Failed to receive data from server");
-        else if (bytes_received == 0)
-            throw std::runtime_error("Server disconnected");
-
-        response_ = std::string(buffer, bytes_received);
-        std::cout << "Received from server: " << response_ << std::endl;
+  while (42) {
+    std::string message;
+    std::getline(std::cin, message);
+    if (std::cin.eof() || !message.compare("exit")) {
+      std::cout << "Client Bye!" << std::endl;
+      break;
     }
-    return 0;
+
+    ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
+    if (bytes_sent < 0)
+      throw std::runtime_error("Failed to send data to server");
+
+    ssize_t bytes_received = recv(client_fd_, buffer, sizeof(buffer), 0);
+    if (bytes_received < 0)
+      throw std::runtime_error("Failed to receive data from server");
+    else if (bytes_received == 0)
+      throw std::runtime_error("Server disconnected");
+
+    response_ = std::string(buffer, bytes_received);
+    std::cout << "Received from server: " << response_ << std::endl;
+  }
+  return 0;
 }
 
 void CheckArgument(int ac, char** av) {
-    if (ac < 2)
-        throw std::runtime_error("Few argument error");
-    for (std::size_t i = 0; av[1][i] != 0; i++) {
-        if (!std::isdigit(av[1][i]))
-            throw std::runtime_error("Port is not number");
-    }
+  if (ac < 2) throw std::runtime_error("Few argument error");
+  for (std::size_t i = 0; av[1][i] != 0; i++) {
+    if (!std::isdigit(av[1][i])) throw std::runtime_error("Port is not number");
+  }
 }
 
 int PrintError(const std::string str) {
-    std::cerr << str << std::endl;
-    return 1;
-}	
+  std::cerr << str << std::endl;
+  return 1;
+}
