@@ -17,7 +17,7 @@ void Server::changeEvents(VEC<struct kevent>& changeList_, uintptr_t ident,
   EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
   changeList_.push_back(tempEvent);
 }
-void Server::disconnectClients_(int clientFd, MAP<int, String>& clients_) {
+void Server::disconnectClients(int clientFd, MAP<int, String>& clients_) {
   std::cout << "client disconnected : " << clientFd << std::endl;
   close(clientFd);
   clients_.erase(clientFd);
@@ -156,7 +156,7 @@ void Server::turnOn() {
             exitWithPerror("server socket error");
           else {
             CER << "clients_ socket error" << CEND;
-            disconnectClients_(currEvent_->ident, clients_);
+            disconnectClients(currEvent_->ident, clients_);
           }
         }
       } else if (currEvent_->filter == EVFILT_READ) {
@@ -180,27 +180,97 @@ void Server::turnOn() {
           char buf[1024];
           int n = recv(currEvent_->ident, buf, sizeof(buf), 0);
           if (n == 0) {
-            disconnectClients_(currEvent_->ident, clients_);
+            disconnectClients(currEvent_->ident, clients_);
             clients_[currEvent_->ident].clear();
           } else {
             buf[n] = '\0';
             clients_[currEvent_->ident].append(buf);
             COUT << "received data from " << currEvent_->ident << ":\n"
                  << clients_[currEvent_->ident] << CEND;
+            size_t firstLine_ = clients_[currEvent_->ident].find('\n');
+            String firstLineString_ =
+                clients_[currEvent_->ident].substr(0, firstLine_);
+            size_t srcStart = firstLineString_.find(' ');
+            size_t srcEnd = firstLineString_.find(' ', srcStart + 1);
+            String srcLine = firstLineString_.substr(srcStart + 1, srcEnd - 4);
             /* send Data to client*/
-            std::map<int, String>::iterator it =
-                clients_.find(currEvent_->ident);
-            if (it != clients_.end()) {
-              int n;
-              n = send(currEvent_->ident, msg_.c_str(), strlen(msg_.c_str()),
-                       MSG_DONTWAIT);
-              if (n == -1) {
-                disconnectClients_(currEvent_->ident, clients_);
-                exitWithPerror("client write error");
-              } else if (n == 0)
-                disconnectClients_(currEvent_->ident, clients_);
-              else
-                clients_[currEvent_->ident].clear();
+            if (srcLine == "/") {
+              std::map<int, String>::iterator it =
+                  clients_.find(currEvent_->ident);
+              if (it != clients_.end()) {
+                int n;
+                n = send(currEvent_->ident, msg_.c_str(), strlen(msg_.c_str()),
+                         MSG_DONTWAIT);
+                if (n == -1) {
+                  disconnectClients(currEvent_->ident, clients_);
+                  exitWithPerror("client write error");
+                } else if (n == 0)
+                  disconnectClients(currEvent_->ident, clients_);
+                else
+                  clients_[currEvent_->ident].clear();
+              }
+            } else {
+              srcLine.erase(0, 1);
+              srcLine.insert(0, DEFAULTLLOCATION);
+              std::ifstream fileEntity_;
+              fileEntity_.open(srcLine);
+              if (!fileEntity_.good()) {
+                break;
+              }
+
+              int lengthFirst;
+              int lengthSecond;
+
+              fileEntity_.seekg(0, fileEntity_.end);
+              lengthFirst = fileEntity_.tellg();
+              fileEntity_.seekg(0, fileEntity_.beg);
+
+              //   char* buffer = new char[lengthFirst + 1];
+              //   buffer[lengthFirst] = '\0';
+              //   fileEntity_.read(buffer, lengthFirst);
+
+              //   std::ifstream httpmsg_;
+              //   httpmsg_.seekg(0, httpmsg_.end);
+              //   lengthSecond = httpmsg_.tellg();
+              //   httpmsg_.open(String(DEFAULTLLOCATION).append(HTTP),
+              //                 std::ifstream::in);
+              //   httpmsg_.seekg(0, httpmsg_.beg);
+              //   char* buffer2 = new char[lengthSecond + 1];
+              //   buffer2[lengthSecond] = '\0';
+              //   httpmsg_.read(buffer2, lengthSecond);
+
+              //   String fileMsg_;
+              //   fileMsg_.append(buffer2);
+              //   size_t pos = fileMsg_.find("3059");
+              //   fileMsg_.erase(pos, 4);
+              //   char length[100];
+              //   sprintf(length, "%d", lengthFirst);
+              //   fileMsg_.insert(pos, length);
+              //   fileMsg_.push_back(static_cast<char>(13));
+              //   fileMsg_.append("\n");
+
+              //   char* totalMsg_ = new char[lengthFirst + lengthSecond + 1];
+              //   totalMsg_[lengthFirst + lengthSecond] = '\n';
+              //   strcpy(totalMsg_, fileMsg_.c_str());
+              //   strcpy(totalMsg_ + lengthSecond, buffer);
+
+              //   int k;
+
+              //   k = send(currEvent_->ident, totalMsg_, strlen(totalMsg_),
+              //            MSG_DONTWAIT);
+              //   if (k == -1) {
+              //     disconnectClients(currEvent_->ident, clients_);
+              //     exitWithPerror("client write error");
+              //   } else if (n == 0)
+              //     disconnectClients(currEvent_->ident, clients_);
+              //   else
+              //     clients_[currEvent_->ident].clear();
+
+              //   fileEntity_.close();
+              //   httpmsg_.close();
+              //   delete[] buffer2;
+              //   delete[] buffer;
+              //   delete[] totalMsg_;
             }
           }
         }
@@ -250,6 +320,8 @@ void Server::fileSetting(const char* path) {
   msg_.push_back(static_cast<char>(13));
   msg_.append("\n");
   msg_.append(buffer2);
+  delete[] buffer1;
+  delete[] buffer2;
 }
 
 int main(int ac, char** av) {
