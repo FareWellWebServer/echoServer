@@ -31,6 +31,8 @@ void Client::Run(void) {
 		if (message.empty()) {
 			break;
 		}
+		if (message.compare("exit") == 0)
+			exit(1);
 		ssize_t bytes_sent = send(client_fd_, message.c_str(), message.size(), 0);
 		if (bytes_sent < 0) {
 			throw std::runtime_error("client error: send failed");

@@ -4,7 +4,7 @@ int main(int ac, char **av)
 {
 	try 
 	{
-		TinyServer server(av[1]);
+		TinyServer server(&(av[1]), ac - 1);
 		server.run();
 		std::cout << "complete" << std::endl;
 	}
