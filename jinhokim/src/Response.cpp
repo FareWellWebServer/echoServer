@@ -11,15 +11,22 @@ void	Response::ResponseHandler(void) {
         return;
     }
 
-    char* method = strtok(const_cast<char*>(request_.c_str()), " ");
-    char* uri = strtok(NULL, " ");
-    if (method == NULL || uri == NULL) {
+    std::size_t method_end_idx = request_.find_first_of(" ");
+    std::cout << "method_end_idx: " << method_end_idx << std::endl;
+    std::string method = request_.substr(0, method_end_idx);
+    std::size_t uri_end_idx = request_.find_first_of(" ", method_end_idx + 1);
+    std::cout << "uri_end_idx: " << uri_end_idx << std::endl;
+    std::string uri = request_.substr(method_end_idx + 1, uri_end_idx - method_end_idx - 1);
+
+    // char* method = strtok(const_cast<char*>(request_.c_str()), " ");
+    // char* uri = strtok(NULL, " ");
+    if (method.size() == 0 || uri.size() == 0) {
         std::cerr << "[ERROR] Failed to identify method, URI" << std::endl;
         Handle500();
         return;
     }
 
-    printf("[INFO] Handling Request: method=%s, URI=%s\n", method, uri);
+    std::cout << "[INFO] Request: method=" << method << ", URI=" << uri << std::endl;
 
     char safe_uri[BUFSIZE];
     char* local_uri;
@@ -31,7 +38,7 @@ void	Response::ResponseHandler(void) {
 
     local_uri = safe_uri + 1;
     if (stat(local_uri, &st) < 0) {
-        perror("[WARN] No file found matching URI.\n");
+        std::cerr << "[WARN] No file found matching URI" << std::endl;
         Handle404();
         return ;
     }
@@ -116,8 +123,8 @@ void	Response::FillHeader(int status, long len, std::string type) {
 			break;
     }
     sprintf(header, HEADER_FORMAT, status, status_text, len, type.c_str());
-	//stream >> status_str;
-	//response_ = "HTTP/1.1" + status_str + " " + status_text + "\r\nContent-Length: " \
+	// stream >> status_str;
+	// response_ = "HTTP/1.1" + status_str + " " + status_text + "\r\nContent-Length: " \
 				//+ len_str + "\nContent-Type: " + type + "\r\n";
     response_ = std::string(header);
 }
