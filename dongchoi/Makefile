@@ -1,5 +1,5 @@
 CXX = c++
-CXXFLAGS =
+# CXXFLAGS = -g3
 SERVER_NAME = server
 SERVER_SRC = TinyServer.cpp main.cpp
 SERVER_OBJECT = $(SERVER_SRC:.cpp=.o)
