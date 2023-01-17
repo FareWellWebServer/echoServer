@@ -75,6 +75,7 @@ void TinyServer::Action() {
 	struct kevent event_trigger[clients_fd_.size() + 1];
 	char buffer[rdwr_buf_size_];
 	int exist_events = kevent(kq_, NULL, 0, event_trigger, clients_fd_.size() + 1, 0);
+	std::cout << "exist_envets : " << exist_events << std::endl; 
 	if (exist_events == -1) {
 		throw std::runtime_error("TinyServer : kevent failed in Action()");
 	}
@@ -85,7 +86,11 @@ void TinyServer::Action() {
 		}
 		// already connection
 		const int client_fd = event_trigger[i].ident;
-		read(client_fd, buffer, rdwr_buf_size_);
+		std::cout << "client_fd : " << client_fd << std::endl; 
+		if (read(client_fd, buffer, rdwr_buf_size_) == 0) {
+			close(client_fd);
+			continue;
+		}
 		// GetRequest(client_fd);
 		int request_fd(0);
 		if (!strncmp(buffer, "GET", 3))
