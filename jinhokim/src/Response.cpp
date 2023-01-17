@@ -93,6 +93,8 @@ std::string Response::FindMime(std::string uri) {
     return "image/jpeg";
   else if (!mime_type.compare(".png"))
     return "image/png";
+  else if (!mime_type.compare(".ico"))
+    return "image/x-icon";
   else if (!mime_type.compare(".css"))
     return "text/css";
   else if (!mime_type.compare(".js"))

@@ -30,46 +30,56 @@ Server::Server(int port) : port_(port) {}
 
 Server::~Server(void) {}
 
-std::string Server::GetIp(void) {
-  std::string ip = std::string(inet_ntoa(address_.sin_addr));
-  std::string port = std::to_string(ntohs(address_.sin_port));
-  return ip + ":" + port;
+int Server::GetServerIdx(int sock) {
+  std::vector<int>::iterator it =
+      std::find(server_fds_.begin(), server_fds_.end(), sock);
+  int i = it - server_fds_.begin();
+
+  return i;
 }
 
-void Server::ChangeEvents(std::vector<struct kevent>& change_list, int socket,
-                          int16_t filter, uint16_t flags, uint32_t fflags,
-                          intptr_t data, void* udata) {
+void Server::ChangeEvents(int socket, int16_t filter, uint16_t flags,
+                          uint32_t fflags, intptr_t data, void* udata) {
   struct kevent temp_event;
 
   EV_SET(&temp_event, socket, filter, flags, fflags, data, udata);
-  change_list.push_back(temp_event);
+  change_list_.push_back(temp_event);
 }
 
-void Server::DisconnectClient(int client_fd,
-                              std::map<int, std::string>& clients) {
+void Server::DisconnectClient(int client_fd) {
   std::cerr << "Client disconnected" << std::endl;
   close(client_fd);
-  clients.erase(client_fd);
+  clients_.erase(client_fd);
 }
 
 int Server::Set(void) {
-  server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-  if (server_fd_ < 0) throw std::runtime_error("Failed to create socket");
-
-  address_.sin_family = AF_INET;
-  address_.sin_port = htons(port_);
-  address_.sin_addr.s_addr = inet_addr("127.0.0.1");
-
   int optval = 1;
-  setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  int sock;
+  sockaddr_in address;
 
-  int bind_result = bind(server_fd_, (sockaddr*)&address_, sizeof(address_));
-  if (bind_result < 0)
-    throw std::runtime_error("Failed to bind socket to address");
+  for (int i = 0; i < 5; ++i) {
+    sock = socket(AF_INET, SOCK_STREAM, 0);
 
-  int listen_result = listen(server_fd_, 1024);
-  if (listen_result < 0) throw std::runtime_error("Failed to listen on socket");
+    if (sock < 0) throw std::runtime_error("Failed to create socket");
 
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port_ + i);
+    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    server_fds_.push_back(sock);
+    address_.push_back(address);
+
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+    int bind_result = bind(sock, (sockaddr*)&address, sizeof(address));
+    if (bind_result < 0)
+      throw std::runtime_error("Failed to bind socket to address");
+
+    int listen_result = listen(sock, 1024);
+    if (listen_result < 0)
+      throw std::runtime_error("Failed to listen on socket");
+  }
   return 0;
 }
 
@@ -77,76 +87,80 @@ int Server::Run(void) {
   int kq = kqueue();
   if (kq == -1) throw std::runtime_error("Failed to init kqueue");
 
-  std::map<int, std::string> clients;
-  std::vector<struct kevent> change_list;
   struct kevent event_list[128];
 
-  ChangeEvents(change_list, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0,
-               NULL);
+  for (std::size_t i = 0; i < server_fds_.size(); ++i)
+    ChangeEvents(server_fds_[i], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 
   int new_events = 1;
   struct kevent* curr_event;
 
   while (42) {
     new_events =
-        kevent(kq, &change_list[0], change_list.size(), event_list, 8, NULL);
+        kevent(kq, &change_list_[0], change_list_.size(), event_list, 8, NULL);
     if (new_events == -1) throw std::runtime_error("Failed kevent()");
 
-    change_list.clear();
+    change_list_.clear();
 
     for (int i = 0; i < new_events; ++i) {
       curr_event = &event_list[i];
 
-      if (curr_event->flags & EV_ERROR) {
-        if (curr_event->ident == static_cast<uintptr_t>(server_fd_))
-          throw std::runtime_error("Server socket error");
-        else
-          DisconnectClient(curr_event->ident, clients);
-      } else if (curr_event->filter == EVFILT_READ) {
-        if (curr_event->ident == static_cast<uintptr_t>(server_fd_)) {
-          socklen_t client_len = sizeof(address_);
-          int client_fd = accept(server_fd_, (sockaddr*)&address_, &client_len);
-          if (client_fd == -1)
-            PrintError("Failed to accept incoming connection");
+      if (curr_event->flags & EV_ERROR)
+        HandleErrorEvent(curr_event->ident);
+      else if (curr_event->filter == EVFILT_READ)
+        HandleReadEvent(curr_event->ident);
+    }
+  }
+  return 0;
+}
 
-          fcntl(client_fd, F_SETFL, O_NONBLOCK);
+int Server::IsServer(uintptr_t ident) {
+  for (std::size_t i = 0; i < server_fds_.size(); ++i) {
+    if (ident == static_cast<uintptr_t>(server_fds_[i])) return 1;
+  }
+  return 0;
+}
 
-          std::cout << "Accepted connection from " << GetIp() << std::endl;
+int Server::HandleErrorEvent(uintptr_t ident) {
+  if (IsServer(ident))
+    throw std::runtime_error("Server socket error");
+  else
+    DisconnectClient(ident);
+  return 0;
+}
 
-          ChangeEvents(change_list, client_fd, EVFILT_READ, EV_ADD | EV_ENABLE,
-                       0, 0, NULL);
-          // ChangeEvents(change_list, client_fd, EVFILT_WRITE, EV_ADD |
-          // EV_ENABLE,
-          //              0, 0, NULL);
-          clients[client_fd] = "";
-        } else if (clients.find(curr_event->ident) != clients.end()) {
-          char buf[BUFSIZE];
-          ssize_t bytes_received = recv(curr_event->ident, buf, sizeof(buf), 0);
-          if (bytes_received <= 0) {
-            if (bytes_received < 0)
-              std::cerr << "Failed to receive data from client" << std::endl;
-            DisconnectClient(curr_event->ident, clients);
-          } else {
-            buf[bytes_received] = '\0';
-            clients[curr_event->ident] += buf;
+int Server::HandleReadEvent(uintptr_t ident) {
+  if (IsServer(ident)) {
+    int i = GetServerIdx(ident);
+    socklen_t client_len = sizeof(address_[i]);
+    int client_fd =
+        accept(server_fds_[i], (sockaddr*)&address_[i], &client_len);
+    if (client_fd == -1)
+      return (PrintError("Failed to accept incoming connection"));
 
-            // std::cout << "request from " << GetIp() << ": " << buf <<
-            // std::endl;
+    fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
-            std::map<int, std::string>::iterator it =
-                clients.find(curr_event->ident);
-            if (it != clients.end()) {
-              if (clients[curr_event->ident] != "") {
-                Response response(buf);
-                response.ResponseHandler();
-                std::string response_str = response.GetResponse();
-                send(curr_event->ident, response_str.c_str(),
-                     response_str.size(), 0);
-              }
-              // DisconnectClient(curr_event->ident, clients);
-              // clients[curr_event->ident].clear();
-            }
-          }
+    ChangeEvents(client_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    clients_[client_fd] = "";
+  } else if (clients_.find(ident) != clients_.end()) {
+    char buf[BUFSIZE];
+    ssize_t bytes_received = recv(ident, buf, sizeof(buf), 0);
+    if (bytes_received <= 0) {
+      if (bytes_received < 0)
+        std::cerr << "Failed to receive data from client" << std::endl;
+      DisconnectClient(ident);
+      return 1;
+    } else {
+      buf[bytes_received] = '\0';
+      clients_[ident] += buf;
+      std::map<int, std::string>::iterator it = clients_.find(ident);
+      if (it != clients_.end()) {
+        if (clients_[ident] != "") {
+          Response response(buf);
+          response.ResponseHandler();
+          std::string response_str = response.GetResponse();
+          send(ident, response_str.c_str(), response_str.size(), 0);
+          return 1;
         }
       }
     }
