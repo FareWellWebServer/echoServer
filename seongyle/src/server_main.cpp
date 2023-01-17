@@ -2,6 +2,7 @@
 
 void main_process(const int& port) {
   Server server(port);
+  server.AddPort(4243);
   server.Run();
 }
 

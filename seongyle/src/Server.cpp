@@ -6,19 +6,23 @@
 
 Server::Server(const int& port) : socket_option_(1) {
   // Create the server socket
-  server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-  if (server_fd_ < 0) {
+  int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (server_fd < 0) {
     throw std::runtime_error("server error: socket create faild");
   }
-  if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &socket_option_,
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &socket_option_,
                  sizeof(socket_option_)) == -1) {
     throw std::runtime_error(strerror(errno));
   }
+  server_fds_.push_back(server_fd);
 
   // Bind the socket to a local address and port
-  server_addr_.sin_family = AF_INET;
-  server_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr_.sin_port = htons(port);
+  sockaddr_in server_addr;
+
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  server_addr.sin_port = htons(port);
+  server_addrs_.push_back(server_addr);
 
   // TODO: 추후 kQueuHandler로 위임.
   // init kqueue;
@@ -27,7 +31,7 @@ Server::Server(const int& port) : socket_option_(1) {
     throw std::runtime_error("server error: kq error");
   }
   // init kevent
-  EV_SET(&event_, server_fd_, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
+  EV_SET(&event_, server_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
   if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("server error : kq event failed");
   }
@@ -36,10 +40,7 @@ Server::Server(const int& port) : socket_option_(1) {
   }
 }
 
-Server::~Server(void) {
-  close(server_fd_);
-  close(kq_);
-}
+Server::~Server(void) { close(kq_); }
 
 void Server::Run() {
   Bind();
@@ -49,10 +50,40 @@ void Server::Run() {
   }
 }
 
-void Server::Accept(void) {
+void Server::AddPort(const int port) {
+  // TODO: server 생성자와 중복으로 추후 분리 필요
+  int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (server_fd < 0) {
+    throw std::runtime_error("server error: socket create faild");
+  }
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &socket_option_,
+                 sizeof(socket_option_)) == -1) {
+    throw std::runtime_error(strerror(errno));
+  }
+  server_fds_.push_back(server_fd);
+
+  sockaddr_in server_addr;
+
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  server_addr.sin_port = htons(port);
+  server_addrs_.push_back(server_addr);
+
+  // init kevent
+  EV_SET(&event_, server_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
+  if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error("server error : kq event failed");
+  }
+  if (event_.flags & EV_ERROR) {
+    throw std::runtime_error("server error : event someting wrong");
+  }
+  //
+}
+
+void Server::Accept(const int server_fd) {
   sockaddr_in client_addr;
   socklen_t client_addr_len = sizeof(client_addr);
-  int client_fd = accept(server_fd_, reinterpret_cast<sockaddr*>(&client_addr),
+  int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr),
                          &client_addr_len);
   if (client_fd < 0) {
     throw std::runtime_error("server error: accept failed");
@@ -75,7 +106,7 @@ int Server::Recv(int& client_fd, char* buffer, int flags) {
     if (kevent(kq_, &event_, 1, NULL, 0, NULL) == -1) {
       throw std::runtime_error("server error: kevent failed");
     }
-    // Removw client from clients vector
+    // Remove client from clients vector
     for (int i = 0; i < clients_.size(); i++) {
       if (clients_[i] == client_fd) {
         clients_.erase(clients_.begin() + i);
@@ -98,16 +129,20 @@ void Server::Send(int& client_fd, char* buffer, int flags, int bytes_received) {
 }
 
 void Server::Bind(void) {
-  if (bind(server_fd_, reinterpret_cast<sockaddr*>(&server_addr_),
-           sizeof(server_addr_)) < 0) {
-    throw std::runtime_error("server error: bind failed");
+  for (int i = 0; i < server_addrs_.size(); i++) {
+    if (bind(server_fds_[i], reinterpret_cast<sockaddr*>(&(server_addrs_[i])),
+             sizeof(server_addrs_[i])) < 0) {
+      throw std::runtime_error("server error: bind failed");
+    }
   }
 }
 
 void Server::Listen(void) {
   // Start listening for incoming connections
-  if (listen(server_fd_, BACKLOG) < 0) {
-    throw std::runtime_error("server error: listen failed");
+  for (int i = 0; i < server_fds_.size(); i++) {
+    if (listen(server_fds_[i], BACKLOG) < 0) {
+      throw std::runtime_error("server error: listen failed");
+    }
   }
 }
 
@@ -119,8 +154,8 @@ void Server::Action() {
     throw std::runtime_error("server error: kevent failed");
   }
   for (int i = 0; i < exist_events; i++) {
-    if (event_trigger[i].ident == server_fd_) {
-      Accept();
+    if (i < server_fds_.size() && event_trigger[i].ident == server_fds_[i]) {
+      Accept(server_fds_[i]);
       continue;
     }
     // already connection
