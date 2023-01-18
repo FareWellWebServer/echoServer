@@ -52,6 +52,8 @@ void Response::Handle200(int ct_len, const char* local_uri) {
 
   ct_type = FindMime(local_uri);
   FillHeader(200, ct_len, ct_type);
+  std::cout << "local_uri: " << local_uri << std::endl;
+  std::cout << "response header: " << response_ << std::endl;
   while ((r = read(fd, buf, BUFSIZE)) > 0) response_.append(buf);
 }
 
